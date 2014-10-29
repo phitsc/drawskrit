@@ -1,12 +1,16 @@
 
 Drawing = {
-    fillRectangle: function(ctx, x, y, w, h) {
-        ctx.fillRect(x, y, w, h);
+    fillRectangle: function(ctx, rect) {
+        ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
     },
 
-    fillCircle: function(ctx, x, y, r) {
+    fillSquare: function(ctx, centerPt, r) {
+        ctx.fillRect(centerPt.x - r, centerPt.y - r, 2 * r, 2 * r);
+    },
+
+    fillCircle: function(ctx, centerPt, r) {
         ctx.beginPath();
-        ctx.arc(x, y, r, 2 * Math.PI, false);
+        ctx.arc(centerPt.x, centerPt.y, r, 2 * Math.PI, false);
         ctx.fill();
         ctx.stroke();
     }
@@ -16,16 +20,20 @@ Drawing = {
     var canvas = document.getElementById("drawing")
     var drawing = canvas.getContext('2d');
 
+    /*
+    Parse multiple rows of text.
+    Returns an array of arrays of instructions.
+    */
     function parse(input)  {
-        var lines = input.split(/\n/);
+        var rows = input.split(/\n/);
 
         var instructions = new Array();
 
-        lines.forEach(function(line) {
-            var perLineInstructions = parseLine(line);
+        rows.forEach(function(row) {
+            var perRowInstructions = parseRow(row);
 
-            if (perLineInstructions) {
-                instructions.push(perLineInstructions);
+            if (perRowInstructions) {
+                instructions.push(perRowInstructions);
             }
         });
 
@@ -36,8 +44,12 @@ Drawing = {
         return instructions;
     }
 
-    function parseLine(line) {
-        var tokens = line.split(/\s+/);
+    /*
+    Parse a single row of text.
+    Returns an array of instructions.
+    */
+    function parseRow(row) {
+        var tokens = row.split(/\s+/);
 
         var instructions = new Array();
 
@@ -71,44 +83,77 @@ Drawing = {
         return instructions.length > 0 ? instructions : null;
     }
 
+    /*
+    Render multiple rows of instructions.
+    Accepts an array of arrays of instructions.
+    */
     function render(instructions) {
         drawing.clearRect(0, 0, canvas.width, canvas.height);
         drawing.fillStyle = "GhostWhite";
         drawing.fillRect(0, 0, canvas.width, canvas.height);
 
-        var lines = instructions.length;
-        var maxShapeHeight = canvas.height / lines;
+        var rowCount = instructions.length;
 
-        var line = 0;
-        instructions.forEach(function(lineInstruction) {
-            renderLine(lineInstruction, line, maxShapeHeight);
-            line++;
+        var currentRow = 0;
+        instructions.forEach(function(rowInstruction) {
+            renderRow(rowInstruction, currentRow, rowCount);
+            currentRow++;
         });
     }
 
-    function renderLine(lineInstructions, line, maxShapeHeight) {
-        var columns = lineInstructions.length;
+    /*
+    Render a single row of instructions.
+    Accepts an array of instructions.
+    */
+    function renderRow(rowInstructions, currentRow, rowCount) {
+        var columnCount = rowInstructions.length;
 
-        var maxShapeWidth = canvas.width / columns;
-
-        var column = 0;
-        lineInstructions.forEach(function(instruction) {
-            renderInstruction(instruction, line, column, maxShapeHeight, maxShapeWidth);
-            column++;
+        var currentColumn = 0;
+        rowInstructions.forEach(function(instruction) {
+            renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount);
+            currentColumn++;
         });
 
     }
 
-    function renderInstruction(instruction, line, column, maxShapeHeight, maxShapeWidth) {
+    /*
+    Calculate the center of a shape (e.g. for circles)
+    */
+    function calcCenter(currentRow, currentColumn, rowCount, columnCount) {
+        var cellWidth = canvas.width / columnCount;
+        var cellHeight = canvas.height / rowCount;
+
+        return { 
+            x: currentColumn * cellWidth + cellWidth / 2,
+            y: currentRow * cellHeight + cellHeight / 2
+        }
+    }
+
+    function calcRect(currentRow, currentColumn, rowCount, columnCount) {
+        var cellWidth = canvas.width / columnCount;
+        var cellHeight = canvas.height / rowCount;
+
+        return { 
+            x: currentColumn * cellWidth,
+            y: currentRow * cellHeight,
+            w: cellWidth,
+            h: cellHeight
+        }
+    }
+
+    /*
+    Render a single instruction.
+    */
+    function renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
         drawing.fillStyle = instruction.color ? instruction.color.trim() : "black";
 
         switch (instruction.shape) {
             case "square":
-                Drawing.fillRectangle(drawing, column * maxShapeWidth, line * maxShapeHeight, maxShapeHeight, maxShapeHeight);
+                Drawing.fillSquare(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), Math.min(canvas.width / columnCount / 2, canvas.height / rowCount / 2));
                 break;
 
             case "circle":
-                Drawing.fillCircle(drawing, canvas.width / 2, line * maxShapeHeight +  maxShapeHeight / 2, maxShapeHeight / 2);
+                Drawing.fillCircle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), Math.min(canvas.width / columnCount / 2, canvas.height / rowCount / 2));
                 break;
         }
     }
