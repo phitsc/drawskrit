@@ -1,7 +1,7 @@
 
 Drawing = {
-    fillRectangle: function(ctx, rect) {
-        ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    fillRectangle: function(ctx, centerPt, halfWidth, halfHeight) {
+        ctx.fillRect(centerPt.x - halfWidth, centerPt.y - halfHeight, 2 * halfWidth, 2 * halfHeight);
     },
 
     fillSquare: function(ctx, centerPt, r) {
@@ -170,16 +170,44 @@ Drawing = {
         return Math.min(canvas.width / columnCount / 2, canvas.height / rowCount / 2) * factor;
     }
 
-    function calcRect(currentRow, currentColumn, rowCount, columnCount) {
-        var cellWidth = canvas.width / columnCount;
-        var cellHeight = canvas.height / rowCount;
+    function calcHalfWidth(columnCount, size) {
+        var factor = 0.8;
 
-        return { 
-            x: currentColumn * cellWidth,
-            y: currentRow * cellHeight,
-            w: cellWidth,
-            h: cellHeight
+        switch (size) {
+            case "big":
+                factor = 1.0;
+                break;
+
+            case "small":
+                factor = 0.55;
+                break;
+
+            case "tiny":
+                factor = 0.3;
+                break;
         }
+
+        return canvas.width / columnCount / 2 * factor;
+    }
+
+    function calcHalfHeight(rowCount, size) {
+        var factor = 0.7;
+
+        switch (size) {
+            case "big":
+                factor = 0.95;
+                break;
+
+            case "small":
+                factor = 0.45;
+                break;
+
+            case "tiny":
+                factor = 0.2;
+                break;
+        }
+
+        return canvas.height / rowCount / 2 * factor;
     }
 
     /*
@@ -188,11 +216,9 @@ Drawing = {
     function renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
         drawing.fillStyle = drawing.strokeStyle = instruction.color ? instruction.color.trim() : "black";
 
-        console.log(instruction.size)
-
         switch (instruction.shape) {
             case "background":
-                Drawing.fillRectangle(drawing, { x: 0, y: 0, w: canvas.width, h: canvas.height });
+                drawing.fillRect(0, 0, canvas.width, canvas.height);
                 break;
 
             case "square":
@@ -202,7 +228,8 @@ Drawing = {
 
             case "rectangle":
             case "rectangles":
-                Drawing.fillRectangle(drawing, calcRect(currentRow, currentColumn, rowCount, columnCount));
+                Drawing.fillRectangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), 
+                    calcHalfWidth(columnCount, instruction.size), calcHalfHeight(rowCount, instruction.size));
                 break;
 
             case "circle":
