@@ -13,6 +13,10 @@ Drawing = {
         ctx.arc(centerPt.x, centerPt.y, r, 2 * Math.PI, false);
         ctx.fill();
         ctx.stroke();
+    },
+
+    fillText: function(ctx, centerPt, text) {
+        ctx.fillText(text, centerPt.x, centerPt.y);
     }
 };
 
@@ -55,26 +59,36 @@ Drawing = {
         var metaInstructions = new Array();
         var drawingInstructions = new Array();
 
-        var label = null;
         var color = null;
-        var size = null; 
+        var textColor = null;
+        var size = null;
+
         var cardinality = 1;
+        var texts = new Array();
 
         tokens.forEach(function(token) {
             switch (token) {
                 case "background": case "border":
                     metaInstructions.push({ color: color, shape: token});
-                    label = color = size = null;
+                    color = textColor = size = null;
                     cardinality = 1;
+                    texts = new Array();
                     return;
 
                 case "square": case "rectangle": case "circle":
                 case "squares": case "rectangles": case "circles":
                     for (var i = 0; i < cardinality; i++) {
-                        drawingInstructions.push({ label: label, color: color, size: size, shape: token});
+                        drawingInstructions.push({ 
+                            text: texts.length > i ? texts[i] : null, 
+                            color: color,
+                            textColor: textColor,
+                            size: size, 
+                            shape: token
+                        });
                     };
-                    label = color = size = null;
+                    color = textColor = size = null;
                     cardinality = 1;
+                    texts = new Array();
                     return;
             }
 
@@ -91,11 +105,21 @@ Drawing = {
                 return;
             }
 
+            if (token.search(/^".*"$/) == 0 || token.search(/^'.*'$/) == 0) {
+                texts.push(token.substr(1, token.length - 2));
+                if (color != null) {
+                    textColor = color;
+                    color = null;
+                }
+            }
+
             if (!isNaN(token)) {
                 cardinality = parseInt(token);
                 return;
             }
         });
+
+        // console.log(drawingInstructions);
 
         return { 
             metaInstructions : metaInstructions.length > 0 ? metaInstructions : null,
@@ -109,6 +133,9 @@ Drawing = {
     */
     function render(instructions) {
         drawing.clearRect(0, 0, canvas.width, canvas.height);
+
+        drawing.textAlign = "center";
+        drawing.textBaseline = "middle";
 
         instructions.metaInstructions.forEach(function(instruction) {
             renderInstruction(instruction);
@@ -214,11 +241,31 @@ Drawing = {
         return canvas.height / rowCount / 2 * factor;
     }
 
+    function calcFontSize(rowCount, columnCount, size) {
+        var factor = 0.75;
+
+        switch (size) {
+            case "big":
+                factor = 1.0;
+                break;
+
+            case "small":
+                factor = 0.5;
+                break;
+
+            case "tiny":
+                factor = 0.25;
+                break;
+        }
+
+        return Math.min(canvas.width / columnCount / 8, canvas.height / rowCount / 8) * factor;  
+    }
+
     /*
     Render a single instruction.
     */
     function renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
-        drawing.fillStyle = drawing.strokeStyle = instruction.color ? instruction.color.trim() : "black";
+        drawing.fillStyle = drawing.strokeStyle = (instruction.color != null ? instruction.color : "black");
 
         switch (instruction.shape) {
             case "background":
@@ -240,6 +287,12 @@ Drawing = {
             case "circles":
                 Drawing.fillCircle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), calcRadius(rowCount, columnCount, instruction.size));
                 break;
+        }
+
+        if (instruction.text) {
+            drawing.fillStyle = instruction.textColor ? instruction.textColor : "black";
+            drawing.font = calcFontSize(rowCount, columnCount, instruction.size) + "pt Arial";
+            Drawing.fillText(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), instruction.text);
         }
     }
 
