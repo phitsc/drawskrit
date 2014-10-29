@@ -60,7 +60,7 @@ Drawing = {
 
         tokens.forEach(function(token) {
             switch (token) {
-                case "square": case "circle":
+                case "square": case "rectangle": case "circle":
                     instructions.push({ label: label, amount: amount, color: color, size: size, shape: token});
                     label = amount = color = size = null;
                     return;
@@ -150,6 +150,10 @@ Drawing = {
         switch (instruction.shape) {
             case "square":
                 Drawing.fillSquare(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), Math.min(canvas.width / columnCount / 2, canvas.height / rowCount / 2));
+                break;
+
+            case "rectangle":
+                Drawing.fillRectangle(drawing, calcRect(currentRow, currentColumn, rowCount, columnCount));
                 break;
 
             case "circle":
