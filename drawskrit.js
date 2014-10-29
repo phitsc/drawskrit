@@ -129,6 +129,29 @@ Drawing = {
         }
     }
 
+    /* 
+    Calculate a shapes radius including specified size
+    */
+    function calcRadius(rowCount, columnCount, size) {
+        var factor = 0.75;
+
+        switch (size) {
+            case "big":
+                factor = 1.0;
+                break;
+
+            case "small":
+                factor = 0.5;
+                break;
+
+            case "tiny":
+                factor = 0.25;
+                break;
+        }
+
+        return Math.min(canvas.width / columnCount / 2, canvas.height / rowCount / 2) * factor;
+    }
+
     function calcRect(currentRow, currentColumn, rowCount, columnCount) {
         var cellWidth = canvas.width / columnCount;
         var cellHeight = canvas.height / rowCount;
@@ -145,11 +168,13 @@ Drawing = {
     Render a single instruction.
     */
     function renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
-        drawing.fillStyle = instruction.color ? instruction.color.trim() : "black";
+        drawing.fillStyle = drawing.strokeStyle = instruction.color ? instruction.color.trim() : "black";
+
+        console.log(instruction.size)
 
         switch (instruction.shape) {
             case "square":
-                Drawing.fillSquare(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), Math.min(canvas.width / columnCount / 2, canvas.height / rowCount / 2));
+                Drawing.fillSquare(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), calcRadius(rowCount, columnCount, instruction.size));
                 break;
 
             case "rectangle":
@@ -157,7 +182,7 @@ Drawing = {
                 break;
 
             case "circle":
-                Drawing.fillCircle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), Math.min(canvas.width / columnCount / 2, canvas.height / rowCount / 2));
+                Drawing.fillCircle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), calcRadius(rowCount, columnCount, instruction.size));
                 break;
         }
     }
