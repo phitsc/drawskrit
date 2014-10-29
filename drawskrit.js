@@ -22,36 +22,38 @@ Drawing = {
 
     /*
     Parse multiple rows of text.
-    Returns an array of arrays of instructions.
+    Returns an array of meta instructions and an array of arrays of drawing instructions.
     */
     function parse(input)  {
         var rows = input.split(/\n/);
 
-        var instructions = new Array();
+        var metaInstructions = new Array();
+        var drawingInstructions = new Array();
 
         rows.forEach(function(row) {
-            var perRowInstructions = parseRow(row);
+            var rowInstructions = parseRow(row);
 
-            if (perRowInstructions) {
-                instructions.push(perRowInstructions);
+            if (rowInstructions.metaInstructions) {
+                metaInstructions = metaInstructions.concat(rowInstructions.metaInstructions);
+            }
+
+            if (rowInstructions.drawingInstructions) {
+                drawingInstructions.push(rowInstructions.drawingInstructions);
             }
         });
 
-        if (instructions.length > 0) {
-            console.log(instructions);
-        }
-
-        return instructions;
+        return { metaInstructions: metaInstructions, drawingInstructions: drawingInstructions };
     }
 
     /*
     Parse a single row of text.
-    Returns an array of instructions.
+    Returns an array of meta instructions and an array of drawing instructions.
     */
     function parseRow(row) {
         var tokens = row.split(/\s+/);
 
-        var instructions = new Array();
+        var metaInstructions = new Array();
+        var drawingInstructions = new Array();
 
         var label = null;
         var amount = null;
@@ -60,8 +62,14 @@ Drawing = {
 
         tokens.forEach(function(token) {
             switch (token) {
+                case "background": case "border":
+                    metaInstructions.push({ color: color, shape: token});
+                    label = amount = color = size = null;
+                    return;
+
                 case "square": case "rectangle": case "circle":
-                    instructions.push({ label: label, amount: amount, color: color, size: size, shape: token});
+                case "squares": case "rectangles": case "circles":
+                    drawingInstructions.push({ label: label, amount: amount, color: color, size: size, shape: token});
                     label = amount = color = size = null;
                     return;
             }
@@ -78,9 +86,17 @@ Drawing = {
                 size = token;
                 return;
             }
+
+            if (!isNaN(token)) {
+                amount = parseInt(token);
+                return;
+            }
         });
 
-        return instructions.length > 0 ? instructions : null;
+        return { 
+            metaInstructions : metaInstructions.length > 0 ? metaInstructions : null,
+            drawingInstructions: drawingInstructions.length > 0 ? drawingInstructions : null
+        };
     }
 
     /*
@@ -89,13 +105,15 @@ Drawing = {
     */
     function render(instructions) {
         drawing.clearRect(0, 0, canvas.width, canvas.height);
-        drawing.fillStyle = "GhostWhite";
-        drawing.fillRect(0, 0, canvas.width, canvas.height);
 
-        var rowCount = instructions.length;
+        instructions.metaInstructions.forEach(function(instruction) {
+            renderInstruction(instruction);
+        });
+
+        var rowCount = instructions.drawingInstructions.length;
 
         var currentRow = 0;
-        instructions.forEach(function(rowInstruction) {
+        instructions.drawingInstructions.forEach(function(rowInstruction) {
             renderRow(rowInstruction, currentRow, rowCount);
             currentRow++;
         });
@@ -173,15 +191,22 @@ Drawing = {
         console.log(instruction.size)
 
         switch (instruction.shape) {
+            case "background":
+                Drawing.fillRectangle(drawing, { x: 0, y: 0, w: canvas.width, h: canvas.height });
+                break;
+
             case "square":
+            case "squares":
                 Drawing.fillSquare(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), calcRadius(rowCount, columnCount, instruction.size));
                 break;
 
             case "rectangle":
+            case "rectangles":
                 Drawing.fillRectangle(drawing, calcRect(currentRow, currentColumn, rowCount, columnCount));
                 break;
 
             case "circle":
+            case "circles":
                 Drawing.fillCircle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), calcRadius(rowCount, columnCount, instruction.size));
                 break;
         }
