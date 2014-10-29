@@ -8,6 +8,15 @@ Drawing = {
         ctx.fillRect(centerPt.x - r, centerPt.y - r, 2 * r, 2 * r);
     },
 
+    fillEllipse: function(ctx, centerPt, halfWidth, halfHeight) {
+        ctx.beginPath();
+        ctx.moveTo(centerPt.x - halfWidth, centerPt.y);
+        ctx.bezierCurveTo(centerPt.x - halfWidth, centerPt.y - halfHeight, centerPt.x + halfWidth, centerPt.y - halfHeight, centerPt.x + halfWidth, centerPt.y);
+        ctx.bezierCurveTo(centerPt.x + halfWidth, centerPt.y + halfHeight, centerPt.x - halfWidth, centerPt.y + halfHeight, centerPt.x - halfWidth, centerPt.y);
+        ctx.fill();
+        ctx.stroke();
+    },
+
     fillCircle: function(ctx, centerPt, r) {
         ctx.beginPath();
         ctx.arc(centerPt.x, centerPt.y, r, 2 * Math.PI, false);
@@ -75,8 +84,8 @@ Drawing = {
                     texts = new Array();
                     return;
 
-                case "square": case "rectangle": case "circle":
-                case "squares": case "rectangles": case "circles":
+                case "square": case "rectangle": case "circle": case "ellipse":
+                case "squares": case "rectangles": case "circles": case "ellipses":
                     for (var i = 0; i < cardinality; i++) {
                         drawingInstructions.push({ 
                             text: texts.length > i ? texts[i] : null, 
@@ -119,7 +128,7 @@ Drawing = {
             }
         });
 
-        // console.log(drawingInstructions);
+        //console.log(drawingInstructions);
 
         return { 
             metaInstructions : metaInstructions.length > 0 ? metaInstructions : null,
@@ -286,6 +295,12 @@ Drawing = {
             case "circle":
             case "circles":
                 Drawing.fillCircle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), calcRadius(rowCount, columnCount, instruction.size));
+                break;
+
+            case "ellipse":
+            case "ellipses":
+                Drawing.fillEllipse(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), 
+                    calcHalfWidth(columnCount, instruction.size), calcHalfHeight(rowCount, instruction.size));
                 break;
         }
 
