@@ -56,21 +56,25 @@ Drawing = {
         var drawingInstructions = new Array();
 
         var label = null;
-        var amount = null;
         var color = null;
         var size = null; 
+        var cardinality = 1;
 
         tokens.forEach(function(token) {
             switch (token) {
                 case "background": case "border":
                     metaInstructions.push({ color: color, shape: token});
-                    label = amount = color = size = null;
+                    label = color = size = null;
+                    cardinality = 1;
                     return;
 
                 case "square": case "rectangle": case "circle":
                 case "squares": case "rectangles": case "circles":
-                    drawingInstructions.push({ label: label, amount: amount, color: color, size: size, shape: token});
-                    label = amount = color = size = null;
+                    for (var i = 0; i < cardinality; i++) {
+                        drawingInstructions.push({ label: label, color: color, size: size, shape: token});
+                    };
+                    label = color = size = null;
+                    cardinality = 1;
                     return;
             }
 
@@ -88,7 +92,7 @@ Drawing = {
             }
 
             if (!isNaN(token)) {
-                amount = parseInt(token);
+                cardinality = parseInt(token);
                 return;
             }
         });
