@@ -1,26 +1,32 @@
 
 Drawing = {
-    fillRectangle: function(ctx, centerPt, halfWidth, halfHeight) {
-        ctx.fillRect(centerPt.x - halfWidth, centerPt.y - halfHeight, 2 * halfWidth, 2 * halfHeight);
+    rectangle: function(ctx, centerPt, halfWidth, halfHeight, fillMode) {
+        ctx.beginPath();
+        ctx.rect(centerPt.x - halfWidth, centerPt.y - halfHeight, 2 * halfWidth, 2 * halfHeight);
+        if (fillMode == "filled") ctx.fill();
+        ctx.stroke();
     },
 
-    fillSquare: function(ctx, centerPt, r) {
-        ctx.fillRect(centerPt.x - r, centerPt.y - r, 2 * r, 2 * r);
+    square: function(ctx, centerPt, r, fillMode) {
+        ctx.beginPath();
+        ctx.rect(centerPt.x - r, centerPt.y - r, 2 * r, 2 * r);
+        if (fillMode == "filled") ctx.fill();
+        ctx.stroke();
     },
 
-    fillEllipse: function(ctx, centerPt, halfWidth, halfHeight) {
+    ellipse: function(ctx, centerPt, halfWidth, halfHeight, fillMode) {
         ctx.beginPath();
         ctx.moveTo(centerPt.x - halfWidth, centerPt.y);
         ctx.bezierCurveTo(centerPt.x - halfWidth, centerPt.y - halfHeight, centerPt.x + halfWidth, centerPt.y - halfHeight, centerPt.x + halfWidth, centerPt.y);
         ctx.bezierCurveTo(centerPt.x + halfWidth, centerPt.y + halfHeight, centerPt.x - halfWidth, centerPt.y + halfHeight, centerPt.x - halfWidth, centerPt.y);
-        ctx.fill();
+        if (fillMode == "filled") ctx.fill();
         ctx.stroke();
     },
 
-    fillCircle: function(ctx, centerPt, r) {
+    circle: function(ctx, centerPt, r, fillMode) {
         ctx.beginPath();
         ctx.arc(centerPt.x, centerPt.y, r, 2 * Math.PI, false);
-        ctx.fill();
+        if (fillMode == "filled") ctx.fill();
         ctx.stroke();
     },
 
@@ -50,8 +56,8 @@ Drawing = {
         var instructions = new Array();
         var metaInstructions = {
             background: { value: "white", shape: "background" },
-            lineStyle: { value: "solid", shape: "lineStyle" },
-            fillStyle: { value: "fill", shape: "fillStyle" }
+            lineStyle: { value: "solid", shape: "lines" },
+            fillMode: { value: "empty", shape: "shapes" }
         };
 
         rows.forEach(function(row) {
@@ -76,6 +82,8 @@ Drawing = {
             color: null,
             textColor:  null,
             size: null,
+            lineStyle: null,
+            fillMode: null,
             cardinality: 1,
             texts: new Array()
         };
@@ -99,14 +107,24 @@ Drawing = {
                     properties = newProperties();
                     return;
 
+                case "lines":
+                    metaInstructions[token] = { value: properties.lineStyle, shape: token };
+                    return;
+
+                case "shapes":
+                    metaInstructions[token] = { value: properties.fillMode, shape: token };
+                    return;
+
                 case "square": case "rectangle": case "circle": case "ellipse":
                 case "squares": case "rectangles": case "circles": case "ellipses":
                     for (var i = 0; i < properties.cardinality; i++) {
                         drawingInstructions.push({ 
-                            text: properties.texts.length > i ? texts[i] : null, 
+                            text: properties.texts.length > i ? properties.texts[i] : null, 
                             color: properties.color,
                             textColor: properties.textColor,
                             size: properties.size, 
+                            lineStyle: properties.lineStyle,
+                            fillMode: properties.fillMode,
                             shape: token
                         });
                     };
@@ -119,16 +137,22 @@ Drawing = {
                 case "olive": case "orange": case "purple": case "red": case "silver": case "teal": case "white": case "yellow":
                     properties.color = token;
                     return;
-            }
 
-            switch (token) {
                 case "tiny": case "small": case "big":
-                properties.size = token;
-                return;
+                    properties.size = token;
+                    return;
+
+                case "dashed": case "dotted": case "solid":
+                    properties.lineStyle = token;
+                    return;
+
+                case "filled": case "empty":
+                    properties.fillMode = token;
+                    return;
             }
 
             if (token.search(/^".*"$/) == 0 || token.search(/^'.*'$/) == 0) {
-                propreties.texts.push(token.substr(1, token.length - 2));
+                properties.texts.push(token.substr(1, token.length - 2));
                 if (properties.color != null) {
                     properties.textColor = properties.color;
                     properties.color = null;
@@ -281,42 +305,71 @@ Drawing = {
         return Math.min(canvas.width / columnCount / 8, canvas.height / rowCount / 8) * factor;  
     }
 
+    function setLineStyle(lineStyle) {
+        switch (lineStyle) {
+            case "dashed":
+                drawing.setLineDash([6]);
+                break;
+            case "dotted":
+                drawing.setLineDash([2, 2]);
+                break;
+            case "solid":                    
+                drawing.setLineDash([]);
+                break;
+        }
+    }
+
     /*
     Render a single instruction.
     */
     function renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
         drawing.fillStyle = drawing.strokeStyle = (instruction.color != null ? instruction.color : "black");
 
+        if (instruction.lineStyle) {
+            setLineStyle(instruction.lineStyle);
+        }
+
         switch (instruction.shape) {
             case "background":
-                drawing.fillStyle = drawing.strokeStyle = instruction.value;
+                drawing.fillStyle = instruction.value;
                 drawing.fillRect(0, canvas.height * currentRow / rowCount, canvas.width, canvas.height / rowCount);
+                break;
+
+            case "lines":
+                setLineStyle(instruction.value);
+                break;
+
+            case "shapes":
+                canvas.fillMode = instruction.value;
                 break;
 
             case "square":
             case "squares":
-                Drawing.fillSquare(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), calcRadius(rowCount, columnCount, instruction.size));
+                Drawing.square(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), 
+                    calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
                 break;
 
             case "rectangle":
             case "rectangles":
-                Drawing.fillRectangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), 
-                    calcHalfWidth(columnCount, instruction.size), calcHalfHeight(rowCount, instruction.size));
+                Drawing.rectangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), 
+                    calcHalfWidth(columnCount, instruction.size), calcHalfHeight(rowCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
                 break;
 
             case "circle":
             case "circles":
-                Drawing.fillCircle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), calcRadius(rowCount, columnCount, instruction.size));
+                Drawing.circle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), 
+                    calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
                 break;
 
             case "ellipse":
             case "ellipses":
-                Drawing.fillEllipse(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), 
-                    calcHalfWidth(columnCount, instruction.size), calcHalfHeight(rowCount, instruction.size));
+                Drawing.ellipse(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), 
+                    calcHalfWidth(columnCount, instruction.size), calcHalfHeight(rowCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
                 break;
         }
 
         if (instruction.text) {
+            console.log(instruction.text)
             drawing.fillStyle = instruction.textColor ? instruction.textColor : "black";
             drawing.font = calcFontSize(rowCount, columnCount, instruction.size) + "pt Arial";
             Drawing.fillText(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), instruction.text);
