@@ -33,29 +33,44 @@ Drawing = {
     var canvas = document.getElementById("drawing")
     var drawing = canvas.getContext('2d');
 
+    function mapLength(obj) {
+        var size = 0;
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) size++;
+        }
+        return size;
+    }
+
     /*
     Parse multiple rows of text.
-    Returns an array of meta instructions and an array of arrays of drawing instructions.
     */
     function parse(input)  {
         var rows = input.split(/\n/);
 
-        var metaInstructions = new Array();
-        var drawingInstructions = new Array();
+        var instructions = new Array();
+        var metaInstructions = {
+            background: { value: "white", shape: "background" },
+            lineStyle: { value: "solid", shape: "lineStyle" },
+            fillStyle: { value: "fill", shape: "fillStyle" }
+        };
 
         rows.forEach(function(row) {
             var rowInstructions = parseRow(row);
 
             if (rowInstructions.metaInstructions) {
-                metaInstructions = metaInstructions.concat(rowInstructions.metaInstructions);
+                for (var key in rowInstructions.metaInstructions) {
+                    metaInstructions[key] = rowInstructions.metaInstructions[key];
+                }
             }
 
             if (rowInstructions.drawingInstructions) {
-                drawingInstructions.push(rowInstructions.drawingInstructions);
+                instructions.push({ drawingInstructions: rowInstructions.drawingInstructions, metaInstructions: JSON.parse(JSON.stringify(metaInstructions)) });
             }
         });
 
-        return { metaInstructions: metaInstructions, drawingInstructions: drawingInstructions };
+        console.log(instructions)
+
+        return instructions;
     }
 
     /*
@@ -65,20 +80,21 @@ Drawing = {
     function parseRow(row) {
         var tokens = row.split(/\s+/);
 
-        var metaInstructions = new Array();
+        var metaInstructions = new Object();
         var drawingInstructions = new Array();
 
         var color = null;
         var textColor = null;
         var size = null;
 
+
         var cardinality = 1;
         var texts = new Array();
 
         tokens.forEach(function(token) {
             switch (token) {
-                case "background": case "border":
-                    metaInstructions.push({ color: color, shape: token});
+                case "background":
+                    metaInstructions[token] = { value: color, shape: token };
                     color = textColor = size = null;
                     cardinality = 1;
                     texts = new Array();
@@ -131,7 +147,7 @@ Drawing = {
         //console.log(drawingInstructions);
 
         return { 
-            metaInstructions : metaInstructions.length > 0 ? metaInstructions : null,
+            metaInstructions : mapLength(metaInstructions) > 0 ? metaInstructions : null,
             drawingInstructions: drawingInstructions.length > 0 ? drawingInstructions : null
         };
     }
@@ -146,15 +162,11 @@ Drawing = {
         drawing.textAlign = "center";
         drawing.textBaseline = "middle";
 
-        instructions.metaInstructions.forEach(function(instruction) {
-            renderInstruction(instruction);
-        });
-
-        var rowCount = instructions.drawingInstructions.length;
+        var rowCount = instructions.length;
 
         var currentRow = 0;
-        instructions.drawingInstructions.forEach(function(rowInstruction) {
-            renderRow(rowInstruction, currentRow, rowCount);
+        instructions.forEach(function(rowInstructions) {
+            renderRow(rowInstructions, currentRow, rowCount);
             currentRow++;
         });
     }
@@ -164,10 +176,14 @@ Drawing = {
     Accepts an array of instructions.
     */
     function renderRow(rowInstructions, currentRow, rowCount) {
-        var columnCount = rowInstructions.length;
+        var columnCount = rowInstructions.drawingInstructions.length;
+
+        for (var key in rowInstructions.metaInstructions) {
+            renderInstruction(rowInstructions.metaInstructions[key], currentRow, currentColumn, rowCount, columnCount);
+        }
 
         var currentColumn = 0;
-        rowInstructions.forEach(function(instruction) {
+        rowInstructions.drawingInstructions.forEach(function(instruction) {
             renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount);
             currentColumn++;
         });
@@ -278,7 +294,9 @@ Drawing = {
 
         switch (instruction.shape) {
             case "background":
-                drawing.fillRect(0, 0, canvas.width, canvas.height);
+                drawing.fillStyle = drawing.strokeStyle = instruction.value;
+                console.log(instruction.value, 0, canvas.height * currentRow / rowCount, canvas.width, canvas.height / rowCount);
+                drawing.fillRect(0, canvas.height * currentRow / rowCount, canvas.width, canvas.height / rowCount);
                 break;
 
             case "square":
