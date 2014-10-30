@@ -68,9 +68,17 @@ Drawing = {
             }
         });
 
-        console.log(instructions)
-
         return instructions;
+    }
+
+    function newProperties() {
+        return {
+            color: null,
+            textColor:  null,
+            size: null,
+            cardinality: 1,
+            texts: new Array()
+        };
     }
 
     /*
@@ -82,69 +90,56 @@ Drawing = {
 
         var metaInstructions = new Object();
         var drawingInstructions = new Array();
-
-        var color = null;
-        var textColor = null;
-        var size = null;
-
-
-        var cardinality = 1;
-        var texts = new Array();
+        var properties = newProperties();
 
         tokens.forEach(function(token) {
             switch (token) {
                 case "background":
-                    metaInstructions[token] = { value: color, shape: token };
-                    color = textColor = size = null;
-                    cardinality = 1;
-                    texts = new Array();
+                    metaInstructions[token] = { value: properties.color, shape: token };
+                    properties = newProperties();
                     return;
 
                 case "square": case "rectangle": case "circle": case "ellipse":
                 case "squares": case "rectangles": case "circles": case "ellipses":
-                    for (var i = 0; i < cardinality; i++) {
+                    for (var i = 0; i < properties.cardinality; i++) {
                         drawingInstructions.push({ 
-                            text: texts.length > i ? texts[i] : null, 
-                            color: color,
-                            textColor: textColor,
-                            size: size, 
+                            text: properties.texts.length > i ? texts[i] : null, 
+                            color: properties.color,
+                            textColor: properties.textColor,
+                            size: properties.size, 
                             shape: token
                         });
                     };
-                    color = textColor = size = null;
-                    cardinality = 1;
-                    texts = new Array();
+                    properties = newProperties();
                     return;
             }
 
             switch (token) {
                 case "aqua": case "black": case "blue": case "fuchsia": case "gray": case "green": case "lime":  case "maroon": case "navy":
                 case "olive": case "orange": case "purple": case "red": case "silver": case "teal": case "white": case "yellow":
-                    color = token;
+                    properties.color = token;
                     return;
             }
 
             switch (token) {
                 case "tiny": case "small": case "big":
-                size = token;
+                properties.size = token;
                 return;
             }
 
             if (token.search(/^".*"$/) == 0 || token.search(/^'.*'$/) == 0) {
-                texts.push(token.substr(1, token.length - 2));
-                if (color != null) {
-                    textColor = color;
-                    color = null;
+                propreties.texts.push(token.substr(1, token.length - 2));
+                if (properties.color != null) {
+                    properties.textColor = properties.color;
+                    properties.color = null;
                 }
             }
 
             if (!isNaN(token)) {
-                cardinality = parseInt(token);
+                properties.cardinality = parseInt(token);
                 return;
             }
         });
-
-        //console.log(drawingInstructions);
 
         return { 
             metaInstructions : mapLength(metaInstructions) > 0 ? metaInstructions : null,
@@ -295,7 +290,6 @@ Drawing = {
         switch (instruction.shape) {
             case "background":
                 drawing.fillStyle = drawing.strokeStyle = instruction.value;
-                console.log(instruction.value, 0, canvas.height * currentRow / rowCount, canvas.width, canvas.height / rowCount);
                 drawing.fillRect(0, canvas.height * currentRow / rowCount, canvas.width, canvas.height / rowCount);
                 break;
 
