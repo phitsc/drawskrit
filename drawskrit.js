@@ -269,7 +269,7 @@ Drawing = {
 
         switch (size) {
             case "big":
-                factor = 1.0;
+                factor = 0.95;
                 break;
 
             case "small":
@@ -289,7 +289,7 @@ Drawing = {
 
         switch (size) {
             case "big":
-                factor = 1.0;
+                factor = 0.95;
                 break;
 
             case "small":
