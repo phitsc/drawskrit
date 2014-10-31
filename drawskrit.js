@@ -176,7 +176,7 @@ Drawing = {
                     properties.fillMode = token;
                     return;
 
-                case "full-height":
+                case "full-height": case "half-height": case "quarter-height":
                     properties.heightModifier = token;
                     return;
             }
@@ -239,6 +239,14 @@ Drawing = {
 
     }
 
+    function heightModifierValue(heightModifier) {
+        switch (heightModifier) {
+            case "full-height": return 2;
+            case "half-height": return 4;
+            case "quarter-height": return 8;
+        }
+    }
+
     /*
     Calculate the center of a shape (e.g. for circles)
     */
@@ -247,7 +255,8 @@ Drawing = {
         var cellHeight = canvas.height / rowCount;
 
         switch (heightModifier) {
-            case "full-height":
+            case "full-height": case "half-height": case "quarter-height":
+
                 return { 
                     x: currentColumn * cellWidth + cellWidth / 2,
                     y: canvas.height / 2
@@ -322,8 +331,8 @@ Drawing = {
         }
 
         switch (heightModifier) {
-            case "full-height":
-                return canvas.height / 2 * factor;
+            case "full-height": case "half-height": case "quarter-height":
+                return canvas.height / heightModifierValue(heightModifier) * factor;
 
             default:
                 return canvas.height / rowCount / 2 * factor;
