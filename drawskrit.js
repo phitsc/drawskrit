@@ -98,6 +98,7 @@ Drawing = {
             size: null,
             lineStyle: null,
             fillMode: null,
+            heightModifier: null,
             cardinality: 1,
             texts: new Array()
         };
@@ -143,6 +144,7 @@ Drawing = {
                             size: properties.size, 
                             lineStyle: properties.lineStyle,
                             fillMode: properties.fillMode,
+                            heightModifier: properties.heightModifier,
                             shape: token
                         });
                     };
@@ -166,6 +168,10 @@ Drawing = {
 
                 case "filled": case "empty":
                     properties.fillMode = token;
+                    return;
+
+                case "full-height":
+                    properties.heightModifier = token;
                     return;
             }
 
@@ -230,13 +236,22 @@ Drawing = {
     /*
     Calculate the center of a shape (e.g. for circles)
     */
-    function calcCenter(currentRow, currentColumn, rowCount, columnCount) {
+    function calcCenter(currentRow, currentColumn, rowCount, columnCount, heightModifier) {
         var cellWidth = canvas.width / columnCount;
         var cellHeight = canvas.height / rowCount;
 
-        return { 
-            x: currentColumn * cellWidth + cellWidth / 2,
-            y: currentRow * cellHeight + cellHeight / 2
+        switch (heightModifier) {
+            case "full-height":
+                return { 
+                    x: currentColumn * cellWidth + cellWidth / 2,
+                    y: canvas.height / 2
+                };
+
+            default:
+                return { 
+                    x: currentColumn * cellWidth + cellWidth / 2,
+                    y: currentRow * cellHeight + cellHeight / 2
+                };
         }
     }
 
@@ -283,7 +298,7 @@ Drawing = {
         return canvas.width / columnCount / 2 * factor;
     }
 
-    function calcHalfHeight(rowCount, size) {
+    function calcHalfHeight(rowCount, size, heightModifier) {
         var factor = 0.7;
 
         switch (size) {
@@ -300,7 +315,13 @@ Drawing = {
                 break;
         }
 
-        return canvas.height / rowCount / 2 * factor;
+        switch (heightModifier) {
+            case "full-height":
+                return canvas.height / 2 * factor;
+
+            default:
+                return canvas.height / rowCount / 2 * factor;
+        }
     }
 
     function calcFontSize(rowCount, columnCount, size) {
@@ -363,40 +384,41 @@ Drawing = {
 
             case "square":
             case "squares":
-                Drawing.square(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), 
+                Drawing.square(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier), 
                     calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
                 break;
 
             case "rectangle":
             case "rectangles":
-                Drawing.rectangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), 
-                    calcHalfWidth(columnCount, instruction.size), calcHalfHeight(rowCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
+                Drawing.rectangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier), 
+                    calcHalfWidth(columnCount, instruction.size), calcHalfHeight(rowCount, instruction.size, instruction.heightModifier),
+                    instruction.fillMode ? instruction.fillMode : canvas.fillMode);
                 break;
 
             case "circle":
             case "circles":
-                Drawing.circle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), 
+                Drawing.circle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier), 
                     calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
                 break;
 
             case "ellipse":
             case "ellipses":
-                Drawing.ellipse(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), 
-                    calcHalfWidth(columnCount, instruction.size), calcHalfHeight(rowCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
+                Drawing.ellipse(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier), 
+                    calcHalfWidth(columnCount, instruction.size), calcHalfHeight(rowCount, instruction.size, instruction.heightModifier),
+                    instruction.fillMode ? instruction.fillMode : canvas.fillMode);
                 break;
 
             case "triangle":
             case "triangles":
-                Drawing.triangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), 
+                Drawing.triangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier), 
                     calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
                 break;
         }
 
         if (instruction.text) {
-            console.log(instruction.text)
             drawing.fillStyle = instruction.textColor ? instruction.textColor : "black";
             drawing.font = calcFontSize(rowCount, columnCount, instruction.size) + "pt Arial";
-            Drawing.fillText(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), instruction.text);
+            Drawing.fillText(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier), instruction.text);
         }
     }
 
