@@ -386,9 +386,14 @@ Drawing = {
 
     window.onload = function() {
         var input = document.getElementById("input");
-        input.onkeypress = function() {
+
+        var draw = function() {
             instructions = parse(input.value);
-            render(instructions);
+            render(instructions); 
+
+            window.requestAnimationFrame(draw);
         };
+
+        window.requestAnimationFrame(draw);
     };
 })();
