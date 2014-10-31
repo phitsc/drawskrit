@@ -131,8 +131,12 @@ Drawing = {
                     return;
 
                 case "blank":
-                    drawingInstructions.push({ shape: "blank" });
-                    break;
+                case "blanks":
+                    for (var i = 0; i < properties.cardinality; i++) {
+                        drawingInstructions.push({ shape: "blank" });
+                    }
+                    properties = newProperties();
+                    return;
 
                 case "square": case "rectangle": case "circle": case "ellipse": case "triangle":
                 case "squares": case "rectangles": case "circles": case "ellipses": case "triangles":
