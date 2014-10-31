@@ -30,6 +30,16 @@ Drawing = {
         ctx.stroke();
     },
 
+    triangle: function(ctx, centerPt, r, fillMode) {
+        ctx.beginPath();
+        ctx.moveTo(centerPt.x, centerPt.y - r);
+        ctx.lineTo(centerPt.x + r, centerPt.y + r);
+        ctx.lineTo(centerPt.x - r, centerPt.y + r);
+        ctx.lineTo(centerPt.x, centerPt.y - r);
+        if (fillMode == "filled") ctx.fill();
+        ctx.stroke();
+    },
+
     fillText: function(ctx, centerPt, text) {
         ctx.fillText(text, centerPt.x, centerPt.y);
     }
@@ -123,8 +133,8 @@ Drawing = {
                     drawingInstructions.push({ shape: "blank" });
                     break;
 
-                case "square": case "rectangle": case "circle": case "ellipse":
-                case "squares": case "rectangles": case "circles": case "ellipses":
+                case "square": case "rectangle": case "circle": case "ellipse": case "triangle":
+                case "squares": case "rectangles": case "circles": case "ellipses": case "triangles":
                     for (var i = 0; i < properties.cardinality; i++) {
                         drawingInstructions.push({ 
                             text: properties.texts.length > i ? properties.texts[i] : null, 
@@ -373,6 +383,12 @@ Drawing = {
             case "ellipses":
                 Drawing.ellipse(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), 
                     calcHalfWidth(columnCount, instruction.size), calcHalfHeight(rowCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
+                break;
+
+            case "triangle":
+            case "triangles":
+                Drawing.triangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount), 
+                    calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
                 break;
         }
 
