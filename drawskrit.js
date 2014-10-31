@@ -61,7 +61,11 @@ Drawing = {
         };
 
         rows.forEach(function(row) {
-            var rowInstructions = parseRow(row);
+            var trimmedRow = row.trim();
+
+            if (trimmedRow.substr(0, 1) == '-') return; // ignore comments
+
+            var rowInstructions = parseRow(trimmedRow);
 
             if (rowInstructions.metaInstructions) {
                 for (var key in rowInstructions.metaInstructions) {
@@ -114,6 +118,10 @@ Drawing = {
                 case "shapes":
                     metaInstructions[token] = { value: properties.fillMode, shape: token };
                     return;
+
+                case "empty":
+                    drawingInstructions.push({ shape: "empty" });
+                    break;
 
                 case "square": case "rectangle": case "circle": case "ellipse":
                 case "squares": case "rectangles": case "circles": case "ellipses":
