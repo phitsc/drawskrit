@@ -124,10 +124,12 @@ Drawing = {
 
                 case "lines":
                     metaInstructions[token] = { value: properties.lineStyle, shape: token };
+                    properties = newProperties();
                     return;
 
                 case "shapes":
                     metaInstructions[token] = { value: properties.fillMode, shape: token };
+                    properties = newProperties();
                     return;
 
                 case "blank":
