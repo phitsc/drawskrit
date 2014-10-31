@@ -119,8 +119,8 @@ Drawing = {
                     metaInstructions[token] = { value: properties.fillMode, shape: token };
                     return;
 
-                case "empty":
-                    drawingInstructions.push({ shape: "empty" });
+                case "blank":
+                    drawingInstructions.push({ shape: "blank" });
                     break;
 
                 case "square": case "rectangle": case "circle": case "ellipse":
