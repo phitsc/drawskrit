@@ -339,7 +339,7 @@ Drawing = {
         }
     }
 
-    function calcFontSize(rowCount, columnCount, size) {
+    function calcFontSize(rowCount, columnCount, size, heightModifier) {
         var factor = 0.75;
 
         switch (size) {
@@ -356,7 +356,9 @@ Drawing = {
                 break;
         }
 
-        return Math.min(canvas.width / columnCount / 8, canvas.height / rowCount / 8) * factor;  
+        var yDiv = heightModifier ? 2 : rowCount;
+
+        return Math.min(canvas.width / columnCount / 8, canvas.height / yDiv / 8) * factor;  
     }
 
     function setLineStyle(lineStyle) {
@@ -430,7 +432,7 @@ Drawing = {
 
         if (instruction.text) {
             drawing.fillStyle = instruction.textColor ? instruction.textColor : "black";
-            drawing.font = calcFontSize(rowCount, columnCount, instruction.size) + "pt Arial";
+            drawing.font = calcFontSize(rowCount, columnCount, instruction.size, instruction.heightModifier) + "pt Arial";
             Drawing.fillText(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier), instruction.text);
         }
     }
