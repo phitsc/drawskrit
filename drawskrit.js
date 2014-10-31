@@ -370,9 +370,7 @@ Drawing = {
     function renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
         drawing.fillStyle = drawing.strokeStyle = (instruction.color != null ? instruction.color : "black");
 
-        if (instruction.lineStyle) {
-            setLineStyle(instruction.lineStyle);
-        }
+        setLineStyle(instruction.lineStyle ? instruction.lineStyle : canvas.lineStyle);
 
         switch (instruction.shape) {
             case "background":
@@ -381,7 +379,7 @@ Drawing = {
                 break;
 
             case "lines":
-                setLineStyle(instruction.value);
+                canvas.lineStyle = instruction.value;
                 break;
 
             case "shapes":
