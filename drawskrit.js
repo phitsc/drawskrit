@@ -215,9 +215,23 @@ Drawing = {
 
         var currentRow = 0;
         instructions.forEach(function(rowInstructions) {
+            renderRowBackground(rowInstructions, currentRow, rowCount);
+            currentRow++;
+        });
+
+        currentRow = 0;
+        instructions.forEach(function(rowInstructions) {
             renderRow(rowInstructions, currentRow, rowCount);
             currentRow++;
         });
+    }
+
+    function renderRowBackground(rowInstructions, currentRow, rowCount) {
+        var columnCount = rowInstructions.drawingInstructions.length;
+
+        for (var key in rowInstructions.metaInstructions) {
+            renderBackgroundInstruction(rowInstructions.metaInstructions[key], currentRow, 0, rowCount, columnCount);
+        }
     }
 
     /*
@@ -228,7 +242,7 @@ Drawing = {
         var columnCount = rowInstructions.drawingInstructions.length;
 
         for (var key in rowInstructions.metaInstructions) {
-            renderInstruction(rowInstructions.metaInstructions[key], currentRow, currentColumn, rowCount, columnCount);
+            renderInstruction(rowInstructions.metaInstructions[key], currentRow, 0, rowCount, columnCount);
         }
 
         var currentColumn = 0;
@@ -236,7 +250,6 @@ Drawing = {
             renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount);
             currentColumn++;
         });
-
     }
 
     function heightModifierValue(heightModifier) {
@@ -375,6 +388,15 @@ Drawing = {
         }
     }
 
+    function renderBackgroundInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
+        switch (instruction.shape) {
+            case "background":
+                drawing.fillStyle = instruction.value;
+                drawing.fillRect(0, canvas.height * currentRow / rowCount, canvas.width, canvas.height / rowCount);
+                break;
+        }
+    }
+
     /*
     Render a single instruction.
     */
@@ -384,11 +406,6 @@ Drawing = {
         setLineStyle(instruction.lineStyle ? instruction.lineStyle : canvas.lineStyle);
 
         switch (instruction.shape) {
-            case "background":
-                drawing.fillStyle = instruction.value;
-                drawing.fillRect(0, canvas.height * currentRow / rowCount, canvas.width, canvas.height / rowCount);
-                break;
-
             case "lines":
                 canvas.lineStyle = instruction.value;
                 break;
