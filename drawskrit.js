@@ -57,6 +57,16 @@ Drawing = {
         return size;
     }
 
+    function clone(object) {
+        return JSON.parse(JSON.stringify(object));
+    }
+
+    Default = {
+        background: function() { return "white" },
+        lineStyle: function() { return "solid" },
+        fillMode: function() { return "empty" }
+    };
+
     /*
     Parse multiple rows of text.
     */
@@ -65,9 +75,8 @@ Drawing = {
 
         var instructions = new Array();
         var metaInstructions = {
-            background: { value: "white", shape: "background" },
-            lineStyle: { value: "solid", shape: "lines" },
-            fillMode: { value: "empty", shape: "shapes" }
+            background: { shape: "background", color: Default.background() },
+            shapes: { shape: "shapes", lineStyle: Default.lineStyle(), fillMode: Default.fillMode() }
         };
 
         rows.forEach(function(row) {
@@ -84,7 +93,7 @@ Drawing = {
             }
 
             if (rowInstructions.drawingInstructions) {
-                instructions.push({ drawingInstructions: rowInstructions.drawingInstructions, metaInstructions: JSON.parse(JSON.stringify(metaInstructions)) });
+                instructions.push({ drawingInstructions: rowInstructions.drawingInstructions, metaInstructions: clone(metaInstructions) });
             }
         });
 
@@ -118,17 +127,15 @@ Drawing = {
         tokens.forEach(function(token) {
             switch (token) {
                 case "background":
-                    metaInstructions[token] = { value: properties.color, shape: token };
-                    properties = newProperties();
-                    return;
-
-                case "lines":
-                    metaInstructions[token] = { value: properties.lineStyle, shape: token };
+                    metaInstructions[token] = { color: properties.color, shape: token };
                     properties = newProperties();
                     return;
 
                 case "shapes":
-                    metaInstructions[token] = { value: properties.fillMode, shape: token };
+                    metaInstructions[token] = { 
+                        shape: token,
+                        lineStyle: properties.lineStyle ? properties.lineStyle : Default.lineStyle(), 
+                        fillMode: properties.fillMode ? properties.fillMode : Default.fillMode() };
                     properties = newProperties();
                     return;
 
@@ -391,7 +398,7 @@ Drawing = {
     function renderBackgroundInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
         switch (instruction.shape) {
             case "background":
-                drawing.fillStyle = instruction.value;
+                drawing.fillStyle = instruction.color;
                 drawing.fillRect(0, canvas.height * currentRow / rowCount, canvas.width, canvas.height / rowCount);
                 break;
         }
@@ -401,19 +408,16 @@ Drawing = {
     Render a single instruction.
     */
     function renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
+        if (instruction.shape == "shapes") {
+            canvas.lineStyle = instruction.lineStyle;
+            canvas.fillMode = instruction.fillMode;
+            return;
+        }
+        
         drawing.fillStyle = drawing.strokeStyle = (instruction.color != null ? instruction.color : "black");
-
         setLineStyle(instruction.lineStyle ? instruction.lineStyle : canvas.lineStyle);
 
         switch (instruction.shape) {
-            case "lines":
-                canvas.lineStyle = instruction.value;
-                break;
-
-            case "shapes":
-                canvas.fillMode = instruction.value;
-                break;
-
             case "square":
             case "squares":
                 Drawing.square(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier), 
