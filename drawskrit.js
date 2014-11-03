@@ -261,9 +261,9 @@ Drawing = {
 
     function heightModifierValue(heightModifier) {
         switch (heightModifier) {
-            case "full-height": return 2;
-            case "half-height": return 4;
-            case "quarter-height": return 8;
+            case "full-height": return 1;
+            case "half-height": return 2;
+            case "quarter-height": return 4;
         }
     }
 
@@ -274,20 +274,19 @@ Drawing = {
         var cellWidth = canvas.width / columnCount;
         var cellHeight = canvas.height / rowCount;
 
-        switch (heightModifier) {
-            case "full-height": case "half-height": case "quarter-height":
+        var y = function() {
+            switch (heightModifier) {
+                case "full-height": case "half-height": case "quarter-height":
+                    return currentRow * cellHeight + cellHeight * (rowCount / 2 / heightModifierValue(heightModifier));
+                default:
+                    return currentRow * cellHeight + cellHeight / 2;
+            }            
+        }();
 
-                return { 
-                    x: currentColumn * cellWidth + cellWidth / 2,
-                    y: canvas.height / 2
-                };
-
-            default:
-                return { 
-                    x: currentColumn * cellWidth + cellWidth / 2,
-                    y: currentRow * cellHeight + cellHeight / 2
-                };
-        }
+        return { 
+            x: currentColumn * cellWidth + cellWidth / 2,
+            y: y
+        };
     }
 
     /* 
@@ -352,7 +351,7 @@ Drawing = {
 
         switch (heightModifier) {
             case "full-height": case "half-height": case "quarter-height":
-                return canvas.height / heightModifierValue(heightModifier) * factor;
+                return canvas.height / heightModifierValue(heightModifier) / 2 * factor;
 
             default:
                 return canvas.height / rowCount / 2 * factor;
