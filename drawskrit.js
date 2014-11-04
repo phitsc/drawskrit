@@ -1,5 +1,6 @@
+"use strict";
 
-Drawing = {
+var Drawing = {
     rectangle: function(ctx, centerPt, halfWidth, halfHeight, fillMode) {
         ctx.beginPath();
         ctx.rect(centerPt.x - halfWidth, centerPt.y - halfHeight, 2 * halfWidth, 2 * halfHeight);
@@ -61,7 +62,7 @@ Drawing = {
         return JSON.parse(JSON.stringify(object));
     }
 
-    Default = {
+    var Default = {
         background: function() { return "white" },
         lineStyle: function() { return "solid" },
         fillMode: function() { return "empty" }
@@ -481,7 +482,7 @@ Drawing = {
         var input = document.getElementById("input");
 
         var draw = function() {
-            instructions = parse(input.value);
+            var instructions = parse(input.value);
             render(instructions); 
 
             window.requestAnimationFrame(draw);
