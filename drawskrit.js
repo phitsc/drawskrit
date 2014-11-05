@@ -135,15 +135,17 @@ var Drawing = {
         var properties = newProperties();
 
         tokens.forEach(function(token) {
-            switch (token) {
+            var keyword = keywordFromToken(token);
+
+            switch (keyword) {
                 case "background":
-                    metaInstructions[token] = { color: properties.color, shape: token };
+                    metaInstructions[keyword] = { color: properties.color, shape: keyword };
                     properties = newProperties();
                     return;
 
                 case "shapes":
-                    metaInstructions[token] = {
-                        shape: token,
+                    metaInstructions[keyword] = {
+                        shape: keyword,
                         lineStyle: properties.lineStyle ? properties.lineStyle : Default.lineStyle(),
                         fillMode: properties.fillMode ? properties.fillMode : Default.fillMode() };
                     properties = newProperties();
@@ -169,50 +171,50 @@ var Drawing = {
                             fillMode: properties.fillMode,
                             heightModifier: properties.heightModifier,
                             widthModifier: properties.widthModifier,
-                            shape: token
+                            shape: keyword
                         });
                     };
                     properties = newProperties();
                     return;
             }
 
-            switch (token) {
+            switch (keyword) {
                 case "aqua": case "black": case "blue": case "fuchsia": case "gray": case "green": case "lime":  case "maroon": case "navy":
                 case "olive": case "orange": case "purple": case "red": case "silver": case "teal": case "white": case "yellow":
-                    properties.color = token;
+                    properties.color = keyword;
                     return;
 
                 case "tiny": case "small": case "big":
-                    properties.size = token;
+                    properties.size = keyword;
                     return;
 
                 case "dashed": case "dotted": case "solid":
-                    properties.lineStyle = token;
+                    properties.lineStyle = keyword;
                     return;
 
                 case "filled": case "empty":
-                    properties.fillMode = token;
+                    properties.fillMode = keyword;
                     return;
 
                 case "full-height": case "half-height": case "quarter-height":
-                    properties.heightModifier = token;
+                    properties.heightModifier = keyword;
                     return;
 
                 case "full-width": case "half-width": case "quarter-width":
-                    properties.widthModifier = token;
+                    properties.widthModifier = keyword;
                     return;
             }
 
-            if (token.search(/^".*"$/) == 0 || token.search(/^'.*'$/) == 0) {
-                properties.texts.push(token.substr(1, token.length - 2));
+            if (keyword.search(/^".*"$/) == 0 || keyword.search(/^'.*'$/) == 0) {
+                properties.texts.push(keyword.substr(1, keyword.length - 2));
                 if (properties.color != null) {
                     properties.textColor = properties.color;
                     properties.color = null;
                 }
             }
 
-            if (!isNaN(token)) {
-                properties.cardinality = parseInt(token);
+            if (!isNaN(keyword)) {
+                properties.cardinality = parseInt(keyword);
                 return;
             }
         });
@@ -221,6 +223,16 @@ var Drawing = {
             metaInstructions : mapLength(metaInstructions) > 0 ? metaInstructions : null,
             drawingInstructions: drawingInstructions.length > 0 ? drawingInstructions : null
         };
+    }
+
+    function keywordFromToken(token) {
+        switch (token) {
+            case "#": return "square";
+            case "o": return "circle";
+            case "[]": return "rectangle";
+            case "()": return "ellipse";
+            default: return token.toLowerCase();
+        }
     }
 
     function renderLayers(layers) {
