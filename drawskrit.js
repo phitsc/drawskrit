@@ -74,6 +74,7 @@ var Drawing = {
     function parse(input)  {
         var rows = input.split(/\n/);
 
+        var layers = new Array();
         var instructions = new Array();
         var metaInstructions = {
             background: { shape: "background", color: Default.background() },
@@ -84,6 +85,12 @@ var Drawing = {
             var trimmedRow = row.trim();
 
             if (trimmedRow.substr(0, 1) == '-') return; // ignore comments
+
+            if (trimmedRow.substr(0, 1) == '=') {
+                layers.push(instructions);
+                instructions = new Array();
+                return;
+            }
 
             var rowInstructions = parseRow(trimmedRow);
 
@@ -98,7 +105,9 @@ var Drawing = {
             }
         });
 
-        return instructions;
+        layers.push(instructions);
+
+        return layers;
     }
 
     function newProperties() {
@@ -133,9 +142,9 @@ var Drawing = {
                     return;
 
                 case "shapes":
-                    metaInstructions[token] = { 
+                    metaInstructions[token] = {
                         shape: token,
-                        lineStyle: properties.lineStyle ? properties.lineStyle : Default.lineStyle(), 
+                        lineStyle: properties.lineStyle ? properties.lineStyle : Default.lineStyle(),
                         fillMode: properties.fillMode ? properties.fillMode : Default.fillMode() };
                     properties = newProperties();
                     return;
@@ -151,11 +160,11 @@ var Drawing = {
                 case "square": case "rectangle": case "circle": case "ellipse": case "triangle":
                 case "squares": case "rectangles": case "circles": case "ellipses": case "triangles":
                     for (var i = 0; i < properties.cardinality; i++) {
-                        drawingInstructions.push({ 
-                            text: properties.texts.length > i ? properties.texts[i] : null, 
+                        drawingInstructions.push({
+                            text: properties.texts.length > i ? properties.texts[i] : null,
                             color: properties.color,
                             textColor: properties.textColor,
-                            size: properties.size, 
+                            size: properties.size,
                             lineStyle: properties.lineStyle,
                             fillMode: properties.fillMode,
                             heightModifier: properties.heightModifier,
@@ -208,29 +217,39 @@ var Drawing = {
             }
         });
 
-        return { 
+        return {
             metaInstructions : mapLength(metaInstructions) > 0 ? metaInstructions : null,
             drawingInstructions: drawingInstructions.length > 0 ? drawingInstructions : null
         };
+    }
+
+    function renderLayers(layers) {
+        drawing.clearRect(0, 0, canvas.width, canvas.height);
+
+        drawing.textAlign = "center";
+        drawing.textBaseline = "middle";
+
+        var firstLayer = true;
+        layers.forEach(function(instructions) {
+            render(instructions, firstLayer);
+            firstLayer = false;
+        });
     }
 
     /*
     Render multiple rows of instructions.
     Accepts an array of arrays of instructions.
     */
-    function render(instructions) {
-        drawing.clearRect(0, 0, canvas.width, canvas.height);
-
-        drawing.textAlign = "center";
-        drawing.textBaseline = "middle";
-
+    function render(instructions, renderBackground) {
         var rowCount = instructions.length;
 
         var currentRow = 0;
-        instructions.forEach(function(rowInstructions) {
-            renderRowBackground(rowInstructions, currentRow, rowCount);
-            currentRow++;
-        });
+        if (renderBackground) {
+            instructions.forEach(function(rowInstructions) {
+                renderRowBackground(rowInstructions, currentRow, rowCount);
+                currentRow++;
+            });
+        }
 
         currentRow = 0;
         instructions.forEach(function(rowInstructions) {
@@ -286,7 +305,7 @@ var Drawing = {
                     return currentColumn * cellWidth + cellWidth * (columnCount / 2 / sizeModifierValue(widthModifier));
                 default:
                     return currentColumn * cellWidth + cellWidth / 2;
-            }            
+            }
         }();
 
         var y = function() {
@@ -295,16 +314,16 @@ var Drawing = {
                     return currentRow * cellHeight + cellHeight * (rowCount / 2 / sizeModifierValue(heightModifier));
                 default:
                     return currentRow * cellHeight + cellHeight / 2;
-            }            
+            }
         }();
 
-        return { 
+        return {
             x: x,
             y: y
         };
     }
 
-    /* 
+    /*
     Calculate a shapes radius including specified size
     */
     function calcRadius(rowCount, columnCount, size) {
@@ -398,7 +417,7 @@ var Drawing = {
 
         var yDiv = heightModifier ? 2 : rowCount;
 
-        return Math.min(canvas.width / columnCount / 8, canvas.height / yDiv / 8) * factor;  
+        return Math.min(canvas.width / columnCount / 8, canvas.height / yDiv / 8) * factor;
     }
 
     function setLineStyle(lineStyle) {
@@ -409,7 +428,7 @@ var Drawing = {
             case "dotted":
                 drawing.setLineDash([2, 2]);
                 break;
-            case "solid":                    
+            case "solid":
                 drawing.setLineDash([]);
                 break;
         }
@@ -433,40 +452,40 @@ var Drawing = {
             canvas.fillMode = instruction.fillMode;
             return;
         }
-        
+
         drawing.fillStyle = drawing.strokeStyle = (instruction.color != null ? instruction.color : "black");
         setLineStyle(instruction.lineStyle ? instruction.lineStyle : canvas.lineStyle);
 
         switch (instruction.shape) {
             case "square":
             case "squares":
-                Drawing.square(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier), 
+                Drawing.square(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier),
                     calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
                 break;
 
             case "rectangle":
             case "rectangles":
-                Drawing.rectangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier), 
+                Drawing.rectangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier),
                     calcHalfWidth(columnCount, instruction.size, instruction.widthModifier), calcHalfHeight(rowCount, instruction.size, instruction.heightModifier),
                     instruction.fillMode ? instruction.fillMode : canvas.fillMode);
                 break;
 
             case "circle":
             case "circles":
-                Drawing.circle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier), 
+                Drawing.circle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier),
                     calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
                 break;
 
             case "ellipse":
             case "ellipses":
-                Drawing.ellipse(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier), 
+                Drawing.ellipse(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier),
                     calcHalfWidth(columnCount, instruction.size, instruction.widthModifier), calcHalfHeight(rowCount, instruction.size, instruction.heightModifier),
                     instruction.fillMode ? instruction.fillMode : canvas.fillMode);
                 break;
 
             case "triangle":
             case "triangles":
-                Drawing.triangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier), 
+                Drawing.triangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier),
                     calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
                 break;
         }
@@ -482,8 +501,8 @@ var Drawing = {
         var input = document.getElementById("input");
 
         var draw = function() {
-            var instructions = parse(input.value);
-            render(instructions); 
+            var layers = parse(input.value);
+            renderLayers(layers);
 
             window.requestAnimationFrame(draw);
         };
