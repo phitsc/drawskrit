@@ -63,9 +63,10 @@ var Drawing = {
     }
 
     var Default = {
-        background: function() { return "white" },
-        lineStyle: function() { return "solid" },
-        fillMode: function() { return "empty" }
+        BACKGROUND: "white",
+        LINE_STYLE: "solid",
+        LINE_WIDTH: "thin",
+        FILL_MODE: "empty"
     };
 
     /*
@@ -77,8 +78,8 @@ var Drawing = {
         var layers = new Array();
         var instructions = new Array();
         var metaInstructions = {
-            background: { shape: "background", color: Default.background() },
-            shapes: { shape: "shapes", lineStyle: Default.lineStyle(), fillMode: Default.fillMode() }
+            background: { shape: "background", color: Default.BACKGROUND },
+            shapes: { shape: "shapes", lineStyle: Default.LINE_STYLE, lineWidth: Default.LINE_WIDTH, fillMode: Default.FILL_MODE }
         };
 
         rows.forEach(function(row) {
@@ -116,6 +117,7 @@ var Drawing = {
             textColor:  null,
             size: null,
             lineStyle: null,
+            lineWidth: null,
             fillMode: null,
             heightModifier: null,
             cardinality: 1,
@@ -146,8 +148,9 @@ var Drawing = {
                 case "shapes":
                     metaInstructions[keyword] = {
                         shape: keyword,
-                        lineStyle: properties.lineStyle ? properties.lineStyle : Default.lineStyle(),
-                        fillMode: properties.fillMode ? properties.fillMode : Default.fillMode() };
+                        lineStyle: properties.lineStyle ? properties.lineStyle : Default.LINE_STYLE,
+                        lineWidth: properties.lineWidth ? properties.lineWidth : Default.LINE_WIDTH,
+                        fillMode: properties.fillMode ? properties.fillMode : Default.FILL_MODE };
                     properties = newProperties();
                     return;
 
@@ -168,6 +171,7 @@ var Drawing = {
                             textColor: properties.textColor,
                             size: properties.size,
                             lineStyle: properties.lineStyle,
+                            lineWidth: properties.lineWidth,
                             fillMode: properties.fillMode,
                             heightModifier: properties.heightModifier,
                             widthModifier: properties.widthModifier,
@@ -190,6 +194,10 @@ var Drawing = {
 
                 case "dashed": case "dotted": case "solid":
                     properties.lineStyle = keyword;
+                    return;
+
+                case "fat": case "thick": case "thin":
+                    properties.lineWidth = keyword;
                     return;
 
                 case "filled": case "empty":
@@ -446,6 +454,20 @@ var Drawing = {
         }
     }
 
+    function setLineWidth(lineWidth) {
+        switch (lineWidth) {
+            case "thin":
+                drawing.lineWidth = 1;
+                break;
+            case "thick":
+                drawing.lineWidth = 4;
+                break;
+            case "fat":
+                drawing.lineWidth = 8;
+                break;
+        }
+    }
+
     function renderBackgroundInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
         switch (instruction.shape) {
             case "background":
@@ -460,45 +482,47 @@ var Drawing = {
     */
     function renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
         if (instruction.shape == "shapes") {
-            canvas.lineStyle = instruction.lineStyle;
-            canvas.fillMode = instruction.fillMode;
+            canvas.defaultLineStyle = instruction.lineStyle;
+            canvas.defaultLineWidth = instruction.lineWidth;
+            canvas.defaultFillMode = instruction.fillMode;
             return;
         }
 
-        drawing.fillStyle = drawing.strokeStyle = (instruction.color != null ? instruction.color : "black");
-        setLineStyle(instruction.lineStyle ? instruction.lineStyle : canvas.lineStyle);
+        drawing.fillStyle = drawing.strokeStyle = (instruction.color ? instruction.color : "black");
+        setLineStyle(instruction.lineStyle ? instruction.lineStyle : canvas.defaultLineStyle);
+        setLineWidth(instruction.lineWidth ? instruction.lineWidth : canvas.defaultLineWidth);
 
         switch (instruction.shape) {
             case "square":
             case "squares":
                 Drawing.square(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier),
-                    calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
+                    calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.defaultFillMode);
                 break;
 
             case "rectangle":
             case "rectangles":
                 Drawing.rectangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier),
                     calcHalfWidth(columnCount, instruction.size, instruction.widthModifier), calcHalfHeight(rowCount, instruction.size, instruction.heightModifier),
-                    instruction.fillMode ? instruction.fillMode : canvas.fillMode);
+                    instruction.fillMode ? instruction.fillMode : canvas.defaultFillMode);
                 break;
 
             case "circle":
             case "circles":
                 Drawing.circle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier),
-                    calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
+                    calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.defaultFillMode);
                 break;
 
             case "ellipse":
             case "ellipses":
                 Drawing.ellipse(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier),
                     calcHalfWidth(columnCount, instruction.size, instruction.widthModifier), calcHalfHeight(rowCount, instruction.size, instruction.heightModifier),
-                    instruction.fillMode ? instruction.fillMode : canvas.fillMode);
+                    instruction.fillMode ? instruction.fillMode : canvas.defaultFillMode);
                 break;
 
             case "triangle":
             case "triangles":
                 Drawing.triangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier),
-                    calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.fillMode);
+                    calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.defaultFillMode);
                 break;
         }
 
