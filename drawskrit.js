@@ -41,8 +41,8 @@ var Drawing = {
         ctx.stroke();
     },
 
-    fillText: function(ctx, centerPt, text) {
-        ctx.fillText(text, centerPt.x, centerPt.y);
+    fillText: function(ctx, centerPt, r, text) {
+        ctx.fillText(text, centerPt.x, centerPt.y, 2 * r);
     }
 };
 
@@ -216,7 +216,7 @@ var Drawing = {
             }
 
             if (keyword.search(/^".*"$/) == 0 || keyword.search(/^'.*'$/) == 0) {
-                properties.texts.push(keyword.substr(1, keyword.length - 2));
+                properties.texts.push(token.substr(1, token.length - 2));
                 if (properties.color != null) {
                     properties.textColor = properties.color;
                     properties.color = null;
@@ -530,9 +530,10 @@ var Drawing = {
         }
 
         if (instruction.text) {
-            drawing.fillStyle = instruction.textColor ? instruction.textColor : "black";
+            drawing.fillStyle = instruction.textColor ? instruction.textColor : canvas.defaultColor;
             drawing.font = calcFontSize(rowCount, columnCount, instruction.size, instruction.heightModifier) + "pt Arial";
-            Drawing.fillText(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier), instruction.text);
+            Drawing.fillText(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier),
+                calcRadius(rowCount, columnCount, instruction.size), instruction.text);
         }
     }
 
