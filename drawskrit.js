@@ -64,6 +64,7 @@ var Drawing = {
 
     var Default = {
         BACKGROUND: "white",
+        COLOR: "black",
         LINE_STYLE: "solid",
         LINE_WIDTH: "thin",
         FILL_MODE: "empty"
@@ -79,7 +80,7 @@ var Drawing = {
         var instructions = new Array();
         var metaInstructions = {
             background: { shape: "background", color: Default.BACKGROUND },
-            shapes: { shape: "shapes", lineStyle: Default.LINE_STYLE, lineWidth: Default.LINE_WIDTH, fillMode: Default.FILL_MODE }
+            shapes: { shape: "shapes", color: Default.COLOR, lineStyle: Default.LINE_STYLE, lineWidth: Default.LINE_WIDTH, fillMode: Default.FILL_MODE }
         };
 
         rows.forEach(function(row) {
@@ -148,6 +149,7 @@ var Drawing = {
                 case "shapes":
                     metaInstructions[keyword] = {
                         shape: keyword,
+                        color: properties.color ? properties.color : Default.COLOR,
                         lineStyle: properties.lineStyle ? properties.lineStyle : Default.LINE_STYLE,
                         lineWidth: properties.lineWidth ? properties.lineWidth : Default.LINE_WIDTH,
                         fillMode: properties.fillMode ? properties.fillMode : Default.FILL_MODE };
@@ -482,13 +484,14 @@ var Drawing = {
     */
     function renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
         if (instruction.shape == "shapes") {
+            canvas.defaultColor = instruction.color;
             canvas.defaultLineStyle = instruction.lineStyle;
             canvas.defaultLineWidth = instruction.lineWidth;
             canvas.defaultFillMode = instruction.fillMode;
             return;
         }
 
-        drawing.fillStyle = drawing.strokeStyle = (instruction.color ? instruction.color : "black");
+        drawing.fillStyle = drawing.strokeStyle = (instruction.color ? instruction.color : canvas.defaultColor);
         setLineStyle(instruction.lineStyle ? instruction.lineStyle : canvas.defaultLineStyle);
         setLineWidth(instruction.lineWidth ? instruction.lineWidth : canvas.defaultLineWidth);
 
