@@ -131,24 +131,24 @@ var Drawing = {
     Returns an array of meta instructions and an array of drawing instructions.
     */
     function parseRow(row) {
-        var tokens = row.split(/\s+/);
-
         var metaInstructions = new Object();
         var drawingInstructions = new Array();
         var properties = newProperties();
 
-        tokens.forEach(function(token) {
-            var keyword = keywordFromToken(token);
+        var tokens = row.split(/\s+/);
 
-            switch (keyword) {
+        tokens.forEach(function(token_) {
+            var token = translateSymbols(token_).toLowerCase();
+
+            switch (token) {
                 case "background":
-                    metaInstructions[keyword] = { color: properties.color, shape: keyword };
+                    metaInstructions[token] = { color: properties.color, shape: token };
                     properties = newProperties();
                     return;
 
                 case "shapes":
-                    metaInstructions[keyword] = {
-                        shape: keyword,
+                    metaInstructions[token] = {
+                        shape: token,
                         color: properties.color ? properties.color : Default.COLOR,
                         lineStyle: properties.lineStyle ? properties.lineStyle : Default.LINE_STYLE,
                         lineWidth: properties.lineWidth ? properties.lineWidth : Default.LINE_WIDTH,
@@ -177,54 +177,54 @@ var Drawing = {
                             fillMode: properties.fillMode,
                             heightModifier: properties.heightModifier,
                             widthModifier: properties.widthModifier,
-                            shape: keyword
+                            shape: token
                         });
                     };
                     properties = newProperties();
                     return;
             }
 
-            switch (keyword) {
+            switch (token) {
                 case "aqua": case "black": case "blue": case "fuchsia": case "gray": case "green": case "lime":  case "maroon": case "navy":
                 case "olive": case "orange": case "purple": case "red": case "silver": case "teal": case "white": case "yellow":
-                    properties.color = keyword;
+                    properties.color = token;
                     return;
 
                 case "tiny": case "small": case "big":
-                    properties.size = keyword;
+                    properties.size = token;
                     return;
 
                 case "dashed": case "dotted": case "solid":
-                    properties.lineStyle = keyword;
+                    properties.lineStyle = token;
                     return;
 
                 case "fat": case "thick": case "thin":
-                    properties.lineWidth = keyword;
+                    properties.lineWidth = token;
                     return;
 
                 case "filled": case "empty":
-                    properties.fillMode = keyword;
+                    properties.fillMode = token;
                     return;
 
                 case "full-height": case "half-height": case "quarter-height":
-                    properties.heightModifier = keyword;
+                    properties.heightModifier = token;
                     return;
 
                 case "full-width": case "half-width": case "quarter-width":
-                    properties.widthModifier = keyword;
+                    properties.widthModifier = token;
                     return;
             }
 
-            if (keyword.search(/^".*"$/) == 0 || keyword.search(/^'.*'$/) == 0) {
-                properties.texts.push(token.substr(1, token.length - 2));
+            if (token.search(/^".*"$/) == 0 || token.search(/^'.*'$/) == 0) {
+                properties.texts.push(token_.substr(1, token_.length - 2));
                 if (properties.color != null) {
                     properties.textColor = properties.color;
                     properties.color = null;
                 }
             }
 
-            if (!isNaN(keyword)) {
-                properties.cardinality = parseInt(keyword);
+            if (!isNaN(token)) {
+                properties.cardinality = parseInt(token);
                 return;
             }
         });
@@ -235,13 +235,13 @@ var Drawing = {
         };
     }
 
-    function keywordFromToken(token) {
+    function translateSymbols(token) {
         switch (token) {
             case "#": return "square";
             case "o": return "circle";
             case "[]": return "rectangle";
             case "()": return "ellipse";
-            default: return token.toLowerCase();
+            default: return token;
         }
     }
 
