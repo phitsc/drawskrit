@@ -41,6 +41,13 @@ var Drawing = {
         ctx.stroke();
     },
 
+    line: function(ctx, centerPt, r) {
+        ctx.beginPath();
+        ctx.moveTo(centerPt.x - r, centerPt.y);
+        ctx.lineTo(centerPt.x + r, centerPt.y);
+        ctx.stroke();
+    },
+
     fillText: function(ctx, centerPt, r, text) {
         ctx.fillText(text, centerPt.x, centerPt.y, 2 * r);
     }
@@ -164,8 +171,8 @@ var Drawing = {
                     properties = newProperties();
                     return;
 
-                case "square": case "rectangle": case "circle": case "ellipse": case "triangle":
-                case "squares": case "rectangles": case "circles": case "ellipses": case "triangles":
+                case "square": case "rectangle": case "circle": case "ellipse": case "triangle": case "line":
+                case "squares": case "rectangles": case "circles": case "ellipses": case "triangles": case "lines":
                     for (var i = 0; i < properties.cardinality; i++) {
                         drawingInstructions.push({
                             text: properties.texts.length > i ? properties.texts[i] : null,
@@ -241,6 +248,8 @@ var Drawing = {
             case "o": return "circle";
             case "[]": return "rectangle";
             case "()": return "ellipse";
+            case "/\\": return "triangle";
+            case "-": return "line";
             default: return token;
         }
     }
@@ -442,13 +451,26 @@ var Drawing = {
         return Math.min(canvas.width / columnCount / 8, canvas.height / yDiv / 8) * factor;
     }
 
-    function setLineStyle(lineStyle) {
+    function calcLineWidth(lineWidth) {
+        switch (lineWidth) {
+            case "thin":
+                return 1;
+            case "thick":
+                return 4;
+            case "fat":
+                return 8;
+        }
+    }
+
+    function setLineStyle(lineStyle, lineWidth) {
+        var w = calcLineWidth(lineWidth);
+
         switch (lineStyle) {
             case "dashed":
-                drawing.setLineDash([6]);
+                drawing.setLineDash([3 * w]);
                 break;
             case "dotted":
-                drawing.setLineDash([2, 2]);
+                drawing.setLineDash([w, w]);
                 break;
             case "solid":
                 drawing.setLineDash([]);
@@ -457,17 +479,7 @@ var Drawing = {
     }
 
     function setLineWidth(lineWidth) {
-        switch (lineWidth) {
-            case "thin":
-                drawing.lineWidth = 1;
-                break;
-            case "thick":
-                drawing.lineWidth = 4;
-                break;
-            case "fat":
-                drawing.lineWidth = 8;
-                break;
-        }
+        drawing.lineWidth = calcLineWidth(lineWidth);
     }
 
     function renderBackgroundInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
@@ -492,7 +504,8 @@ var Drawing = {
         }
 
         drawing.fillStyle = drawing.strokeStyle = (instruction.color ? instruction.color : canvas.defaultColor);
-        setLineStyle(instruction.lineStyle ? instruction.lineStyle : canvas.defaultLineStyle);
+        setLineStyle(instruction.lineStyle ? instruction.lineStyle : canvas.defaultLineStyle,
+                     instruction.lineWidth ? instruction.lineWidth : canvas.defaultLineWidth);
         setLineWidth(instruction.lineWidth ? instruction.lineWidth : canvas.defaultLineWidth);
 
         switch (instruction.shape) {
@@ -526,6 +539,12 @@ var Drawing = {
             case "triangles":
                 Drawing.triangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier),
                     calcRadius(rowCount, columnCount, instruction.size), instruction.fillMode ? instruction.fillMode : canvas.defaultFillMode);
+                break;
+
+            case "line":
+            case "lines":
+                Drawing.line(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount, instruction.heightModifier, instruction.widthModifier),
+                    calcRadius(rowCount, columnCount, instruction.size));
                 break;
         }
 
