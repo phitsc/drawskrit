@@ -1,58 +1,93 @@
 "use strict";
 
-var Drawing = {
-    rectangle: function(ctx, centerPt, halfWidth, halfHeight, fillMode) {
-        ctx.beginPath();
-        ctx.rect(centerPt.x - halfWidth, centerPt.y - halfHeight, 2 * halfWidth, 2 * halfHeight);
-        if (fillMode == "filled") ctx.fill();
-        ctx.stroke();
-    },
+function Drawing(canvas)  {
+    var ctx = canvas.getContext('2d');
 
-    square: function(ctx, centerPt, r, fillMode) {
-        Drawing.rectangle(ctx, centerPt, r, r, fillMode);
-    },
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
 
-    ellipse: function(ctx, centerPt, halfWidth, halfHeight, fillMode) {
-        ctx.beginPath();
-        ctx.moveTo(centerPt.x - halfWidth, centerPt.y);
-        ctx.bezierCurveTo(centerPt.x - halfWidth, centerPt.y - halfHeight, centerPt.x + halfWidth, centerPt.y - halfHeight, centerPt.x + halfWidth, centerPt.y);
-        ctx.bezierCurveTo(centerPt.x + halfWidth, centerPt.y + halfHeight, centerPt.x - halfWidth, centerPt.y + halfHeight, centerPt.x - halfWidth, centerPt.y);
-        if (fillMode == "filled") ctx.fill();
-        ctx.stroke();
-    },
+    return {
+        clear: function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        },
 
-    circle: function(ctx, centerPt, r, fillMode) {
-        ctx.beginPath();
-        ctx.arc(centerPt.x, centerPt.y, r, 2 * Math.PI, false);
-        if (fillMode == "filled") ctx.fill();
-        ctx.stroke();
-    },
+        setLineDash: function(value) {
+            ctx.setLineDash(value);
+        },
 
-    triangle: function(ctx, centerPt, r, fillMode) {
-        ctx.beginPath();
-        ctx.moveTo(centerPt.x, centerPt.y - r);
-        ctx.lineTo(centerPt.x + r, centerPt.y + r);
-        ctx.lineTo(centerPt.x - r, centerPt.y + r);
-        ctx.lineTo(centerPt.x, centerPt.y - r);
-        if (fillMode == "filled") ctx.fill();
-        ctx.stroke();
-    },
+        setLineWidth: function(value) {
+            ctx.lineWidth = value;
+        },
 
-    line: function(ctx, centerPt, r) {
-        ctx.beginPath();
-        ctx.moveTo(centerPt.x - r, centerPt.y);
-        ctx.lineTo(centerPt.x + r, centerPt.y);
-        ctx.stroke();
-    },
+        setFillStyle: function(value) {
+            ctx.fillStyle = value;
+        },
 
-    fillText: function(ctx, centerPt, r, text) {
-        ctx.fillText(text, centerPt.x, centerPt.y, 2 * r);
+        setStrokeStyle: function(value) {
+            ctx.strokeStyle = value;
+        },
+
+        setFont: function(value) {
+            ctx.font = value;
+        },
+
+        rectangle: function(centerPt, halfWidth, halfHeight, fillMode) {
+            ctx.beginPath();
+            ctx.rect(centerPt.x - halfWidth, centerPt.y - halfHeight, 2 * halfWidth, 2 * halfHeight);
+            if (fillMode == "filled") ctx.fill();
+            ctx.stroke();
+        },
+
+        fillRectangle: function(centerPt, halfWidth, halfHeight) {
+            ctx.fillRect(centerPt.x - halfWidth, centerPt.y - halfHeight, 2 * halfWidth, 2 * halfHeight);
+        },
+
+        square: function(centerPt, r, fillMode) {
+            this.rectangle(centerPt, r, r, fillMode);
+        },
+
+        ellipse: function(centerPt, halfWidth, halfHeight, fillMode) {
+            ctx.beginPath();
+            ctx.moveTo(centerPt.x - halfWidth, centerPt.y);
+            ctx.bezierCurveTo(centerPt.x - halfWidth, centerPt.y - halfHeight, centerPt.x + halfWidth, centerPt.y - halfHeight, centerPt.x + halfWidth, centerPt.y);
+            ctx.bezierCurveTo(centerPt.x + halfWidth, centerPt.y + halfHeight, centerPt.x - halfWidth, centerPt.y + halfHeight, centerPt.x - halfWidth, centerPt.y);
+            if (fillMode == "filled") ctx.fill();
+            ctx.stroke();
+        },
+
+        circle: function(centerPt, r, fillMode) {
+            ctx.beginPath();
+            ctx.arc(centerPt.x, centerPt.y, r, 2 * Math.PI, false);
+            if (fillMode == "filled") ctx.fill();
+            ctx.stroke();
+        },
+
+        triangle: function(centerPt, r, fillMode) {
+            ctx.beginPath();
+            ctx.moveTo(centerPt.x, centerPt.y - r);
+            ctx.lineTo(centerPt.x + r, centerPt.y + r);
+            ctx.lineTo(centerPt.x - r, centerPt.y + r);
+            ctx.lineTo(centerPt.x, centerPt.y - r);
+            if (fillMode == "filled") ctx.fill();
+            ctx.stroke();
+        },
+
+        line: function(centerPt, r) {
+            ctx.beginPath();
+            ctx.moveTo(centerPt.x - r, centerPt.y);
+            ctx.lineTo(centerPt.x + r, centerPt.y);
+            ctx.stroke();
+        },
+
+        fillText: function(centerPt, r, text) {
+            ctx.fillText(text, centerPt.x, centerPt.y, 2 * r);
+        }
     }
 };
 
 ;(function() {
     var canvas = document.getElementById("drawing")
-    var drawing = canvas.getContext('2d');
+    var drawing = Drawing(canvas);
 
     function mapLength(obj) {
         var size = 0;
@@ -241,10 +276,7 @@ var Drawing = {
     }
 
     function renderLayers(layers) {
-        drawing.clearRect(0, 0, canvas.width, canvas.height);
-
-        drawing.textAlign = "center";
-        drawing.textBaseline = "middle";
+        drawing.clear();
 
         var firstLayer = true;
         layers.forEach(function(instructions) {
@@ -385,14 +417,19 @@ var Drawing = {
     }
 
     function setLineWidth(lineWidth) {
-        drawing.lineWidth = calcLineWidth(lineWidth);
+        drawing.setLineWidth(calcLineWidth(lineWidth));
     }
 
     function renderBackgroundInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
         switch (instruction.shape) {
             case "background":
-                drawing.fillStyle = instruction.color;
-                drawing.fillRect(0, canvas.height * currentRow / rowCount, canvas.width, canvas.height / rowCount);
+                drawing.setFillStyle(instruction.color);
+                drawing.fillRectangle({
+                    x: canvas.width / 2,
+                    y: (canvas.height * currentRow / rowCount) + (canvas.height / rowCount / 2)
+                },
+                canvas.width / 2,
+                (canvas.height / rowCount / 2));
                 break;
         }
     }
@@ -409,57 +446,58 @@ var Drawing = {
             return;
         }
 
-        drawing.fillStyle = drawing.strokeStyle = instruction.color || canvas.defaultColor;
+        drawing.setFillStyle(instruction.color || canvas.defaultColor);
+        drawing.setStrokeStyle(instruction.color || canvas.defaultColor);
         setLineStyle(instruction.lineStyle || canvas.defaultLineStyle, instruction.lineWidth || canvas.defaultLineWidth);
         setLineWidth(instruction.lineWidth || canvas.defaultLineWidth);
 
         switch (instruction.shape) {
             case "square":
             case "squares":
-                Drawing.square(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount),
+                drawing.square(calcCenter(currentRow, currentColumn, rowCount, columnCount),
                     Math.min(calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size)),
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "rectangle":
             case "rectangles":
-                Drawing.rectangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount),
+                drawing.rectangle(calcCenter(currentRow, currentColumn, rowCount, columnCount),
                     calcRadius(canvas.width, columnCount, instruction.size) * 1.1, calcRadius(canvas.height, rowCount, instruction.size) * 0.9,
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "circle":
             case "circles":
-                Drawing.circle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount),
+                drawing.circle(calcCenter(currentRow, currentColumn, rowCount, columnCount),
                     Math.min(calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size)),
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "ellipse":
             case "ellipses":
-                Drawing.ellipse(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount),
+                drawing.ellipse(calcCenter(currentRow, currentColumn, rowCount, columnCount),
                     calcRadius(canvas.width, columnCount, instruction.size) * 1.1, calcRadius(canvas.height, rowCount, instruction.size) * 0.9,
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "triangle":
             case "triangles":
-                Drawing.triangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount),
+                drawing.triangle(calcCenter(currentRow, currentColumn, rowCount, columnCount),
                     Math.min(calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size)),
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "line":
             case "lines":
-                Drawing.line(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount),
+                drawing.line(calcCenter(currentRow, currentColumn, rowCount, columnCount),
                     calcRadius(canvas.width, columnCount, instruction.size));
                 break;
         }
 
         if (instruction.text) {
-            drawing.fillStyle = instruction.textColor || canvas.defaultColor;
-            drawing.font = calcFontSize(rowCount, columnCount, instruction.size) + "pt Arial";
-            Drawing.fillText(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount),
+            drawing.setFillStyle(instruction.textColor || canvas.defaultColor);
+            drawing.setFont(calcFontSize(rowCount, columnCount, instruction.size) + "pt Arial");
+            drawing.fillText(calcCenter(currentRow, currentColumn, rowCount, columnCount),
                 Math.min(calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size)),
                 instruction.text);
         }
