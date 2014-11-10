@@ -9,10 +9,7 @@ var Drawing = {
     },
 
     square: function(ctx, centerPt, r, fillMode) {
-        ctx.beginPath();
-        ctx.rect(centerPt.x - r, centerPt.y - r, 2 * r, 2 * r);
-        if (fillMode == "filled") ctx.fill();
-        ctx.stroke();
+        Drawing.rectangle(ctx, centerPt, r, r, fillMode);
     },
 
     ellipse: function(ctx, centerPt, halfWidth, halfHeight, fillMode) {
