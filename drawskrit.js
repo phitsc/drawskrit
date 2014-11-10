@@ -155,10 +155,10 @@ var Drawing = {
                 case "shapes":
                     metaInstructions[token] = {
                         shape: token,
-                        color: properties.color ? properties.color : Default.COLOR,
-                        lineStyle: properties.lineStyle ? properties.lineStyle : Default.LINE_STYLE,
-                        lineWidth: properties.lineWidth ? properties.lineWidth : Default.LINE_WIDTH,
-                        fillMode: properties.fillMode ? properties.fillMode : Default.FILL_MODE };
+                        color: properties.color || Default.COLOR,
+                        lineStyle: properties.lineStyle || Default.LINE_STYLE,
+                        lineWidth: properties.lineWidth || Default.LINE_WIDTH,
+                        fillMode: properties.fillMode || Default.FILL_MODE };
                     properties = newProperties();
                     return;
 
@@ -412,45 +412,44 @@ var Drawing = {
             return;
         }
 
-        drawing.fillStyle = drawing.strokeStyle = (instruction.color ? instruction.color : canvas.defaultColor);
-        setLineStyle(instruction.lineStyle ? instruction.lineStyle : canvas.defaultLineStyle,
-                     instruction.lineWidth ? instruction.lineWidth : canvas.defaultLineWidth);
-        setLineWidth(instruction.lineWidth ? instruction.lineWidth : canvas.defaultLineWidth);
+        drawing.fillStyle = drawing.strokeStyle = instruction.color || canvas.defaultColor;
+        setLineStyle(instruction.lineStyle || canvas.defaultLineStyle, instruction.lineWidth || canvas.defaultLineWidth);
+        setLineWidth(instruction.lineWidth || canvas.defaultLineWidth);
 
         switch (instruction.shape) {
             case "square":
             case "squares":
                 Drawing.square(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount),
                     Math.min(calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size)),
-                    instruction.fillMode ? instruction.fillMode : canvas.defaultFillMode);
+                    instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "rectangle":
             case "rectangles":
                 Drawing.rectangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount),
                     calcRadius(canvas.width, columnCount, instruction.size) * 1.1, calcRadius(canvas.height, rowCount, instruction.size) * 0.9,
-                    instruction.fillMode ? instruction.fillMode : canvas.defaultFillMode);
+                    instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "circle":
             case "circles":
                 Drawing.circle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount),
                     Math.min(calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size)),
-                    instruction.fillMode ? instruction.fillMode : canvas.defaultFillMode);
+                    instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "ellipse":
             case "ellipses":
                 Drawing.ellipse(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount),
                     calcRadius(canvas.width, columnCount, instruction.size) * 1.1, calcRadius(canvas.height, rowCount, instruction.size) * 0.9,
-                    instruction.fillMode ? instruction.fillMode : canvas.defaultFillMode);
+                    instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "triangle":
             case "triangles":
                 Drawing.triangle(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount),
                     Math.min(calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size)),
-                    instruction.fillMode ? instruction.fillMode : canvas.defaultFillMode);
+                    instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "line":
@@ -461,7 +460,7 @@ var Drawing = {
         }
 
         if (instruction.text) {
-            drawing.fillStyle = instruction.textColor ? instruction.textColor : canvas.defaultColor;
+            drawing.fillStyle = instruction.textColor || canvas.defaultColor;
             drawing.font = calcFontSize(rowCount, columnCount, instruction.size) + "pt Arial";
             Drawing.fillText(drawing, calcCenter(currentRow, currentColumn, rowCount, columnCount),
                 Math.min(calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size)),
