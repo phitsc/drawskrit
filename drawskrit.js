@@ -127,7 +127,7 @@ function Drawing(canvas)  {
 
             if (trimmedRow.substr(0, 1) == '-') return; // ignore comments
 
-            if (trimmedRow.substr(0, 1) == '=') {
+            if (trimmedRow.substr(0, 1) == '=') { // new layer
                 layers.push(instructions);
                 instructions = new Array();
                 return;
