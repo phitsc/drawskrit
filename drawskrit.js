@@ -55,6 +55,15 @@ function Drawing(canvas)  {
             ctx.stroke();
         },
 
+        smile: function(centerPt, halfWidth, halfHeight, fillMode) {
+            ctx.beginPath();
+            ctx.moveTo(centerPt.x - halfWidth, centerPt.y - halfHeight / 2);
+            ctx.bezierCurveTo(centerPt.x - halfWidth, centerPt.y + halfHeight, centerPt.x + halfWidth, centerPt.y + halfHeight, centerPt.x + halfWidth, centerPt.y - halfHeight / 2);
+            ctx.bezierCurveTo(centerPt.x + halfWidth, centerPt.y, centerPt.x - halfWidth, centerPt.y, centerPt.x - halfWidth, centerPt.y - halfHeight / 2);
+            if (fillMode == "filled") ctx.fill();
+            ctx.stroke();
+        },
+
         circle: function(centerPt, r, fillMode) {
             ctx.beginPath();
             ctx.arc(centerPt.x, centerPt.y, r, 2 * Math.PI, false);
@@ -202,8 +211,8 @@ function Drawing(canvas)  {
                     properties = newProperties();
                     return;
 
-                case "square": case "rectangle": case "circle": case "ellipse": case "triangle": case "line":
-                case "squares": case "rectangles": case "circles": case "ellipses": case "triangles": case "lines":
+                case "square": case "rectangle": case "circle": case "ellipse": case "triangle": case "line": case "smile":
+                case "squares": case "rectangles": case "circles": case "ellipses": case "triangles": case "lines": case "smiles":
                     for (var i = 0; i < properties.cardinality; i++) {
                         drawingInstructions.push({
                             text: properties.texts.length > i ? properties.texts[i] : null,
@@ -265,6 +274,7 @@ function Drawing(canvas)  {
 
     function translateSymbols(token) {
         switch (token) {
+            case "_": return "blank";
             case "#": return "square";
             case "o": return "circle";
             case "[]": return "rectangle";
@@ -464,6 +474,13 @@ function Drawing(canvas)  {
             case "ellipse":
             case "ellipses":
                 drawing.ellipse(calcCenter(currentRow, currentColumn, rowCount, columnCount),
+                    calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size) * 0.8,
+                    instruction.fillMode || canvas.defaultFillMode);
+                break;
+
+            case "smile":
+            case "smiles":
+                drawing.smile(calcCenter(currentRow, currentColumn, rowCount, columnCount),
                     calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size) * 0.8,
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
