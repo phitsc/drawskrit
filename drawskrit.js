@@ -226,7 +226,7 @@ function Drawing(canvas)  {
                     properties.color = token;
                     return;
 
-                case "tiny": case "small": case "big":
+                case "tiny": case "small": case "big": case "huge":
                     properties.size = token;
                     return;
 
@@ -346,47 +346,35 @@ function Drawing(canvas)  {
         };
     }
 
+    function factor(size) {
+        switch (size) {
+            case "huge":
+                return 1.0;
+
+            case "big":
+                return 0.85;
+
+            case "small":
+                return 0.5;
+
+            case "tiny":
+                return 0.25;
+
+            default:
+                return 0.75;
+        }
+    }
+
     /*
     Calculate a shapes radius
     */
     function calcRadius(canvasSize, count, size) {
-        var factor = 0.8;
 
-        switch (size) {
-            case "big":
-                factor = 0.99;
-                break;
-
-            case "small":
-                factor = 0.5;
-                break;
-
-            case "tiny":
-                factor = 0.25;
-                break;
-        }
-
-        return canvasSize / count / 2 * factor;
+        return canvasSize / count / 2 * factor(size);
     }
 
     function calcFontSize(rowCount, columnCount, size) {
-        var factor = 0.75;
-
-        switch (size) {
-            case "big":
-                factor = 1.0;
-                break;
-
-            case "small":
-                factor = 0.5;
-                break;
-
-            case "tiny":
-                factor = 0.25;
-                break;
-        }
-
-        return Math.min(canvas.width / columnCount / 8, canvas.height / rowCount / 8) * factor;
+        return Math.min(canvas.width / columnCount / 8, canvas.height / rowCount / 8) * factor(size);
     }
 
     function calcLineWidth(lineWidth) {
@@ -462,7 +450,7 @@ function Drawing(canvas)  {
             case "rectangle":
             case "rectangles":
                 drawing.rectangle(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    calcRadius(canvas.width, columnCount, instruction.size) * 1.1, calcRadius(canvas.height, rowCount, instruction.size) * 0.9,
+                    calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size) * 0.8,
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
@@ -476,7 +464,7 @@ function Drawing(canvas)  {
             case "ellipse":
             case "ellipses":
                 drawing.ellipse(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    calcRadius(canvas.width, columnCount, instruction.size) * 1.1, calcRadius(canvas.height, rowCount, instruction.size) * 0.9,
+                    calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size) * 0.8,
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
