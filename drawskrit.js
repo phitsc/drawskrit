@@ -173,6 +173,43 @@ function Drawing(canvas)  {
         };
     }
 
+    function splitSpaceOrQuotes(line) {
+
+        var values = new Array();
+
+        if (line.length > 0) {
+            var inQuote = null;
+            var value = "";
+
+            for (var index = 0; index < line.length; ++index) {
+                var character = line.charAt(index);
+
+                if (character == inQuote) {
+                    value += character;
+                    values.push(value);
+                    value = "";
+                    inQuote = null;
+                } else if ((character == '"' || character == '\'') && !inQuote) {
+                    value += character;
+                    inQuote = character;
+                } else if (/\s/.test(character) && !inQuote) {
+                    if (value.length > 0) {
+                        values.push(value);
+                        value = "";
+                    }
+                } else {
+                    value += character;
+                }
+            }
+
+            values.push(value);
+        }
+
+        console.log(values);
+
+        return values;
+    }
+
     /*
     Parse a single row of text.
     Returns an array of meta instructions and an array of drawing instructions.
@@ -182,7 +219,7 @@ function Drawing(canvas)  {
         var drawingInstructions = new Array();
         var properties = newProperties();
 
-        var tokens = row.split(/\s+/);
+        var tokens = splitSpaceOrQuotes(row);
 
         tokens.forEach(function(token_) {
             var token = translateSymbols(token_).toLowerCase();
