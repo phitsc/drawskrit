@@ -64,11 +64,43 @@ The purpose of `blank` is to add invisible shapes to the grid in order to resize
 
 ### Shape cardinality
 
+A natural number specified before a shape multiplies that shape the respective number of times.
+
+Draw four red circles:
+
+```
+4 red circles
+```
+
+Notice that all shapes can also be specified in their plural form.
 
 
 ### Shape properties
 
-The order in which shape properties are specified is irrelevant.
+Shapes can be specified with various properties in order to change their color, size, filling and line style.
+
+#### Color
+
+Valid color specifiers are:
+
+* aqua, black, blue, fuchsia, gray, green, lime, maroon, navy, olive, orange, purple, red, silver, teal, white, and yellow.
+
+#### Size
+
+Valid size specifiers are:
+
+Size | % if cell width / height
+:---:|:------:
+tiny | 25%
+small | 50%
+big   | 85%
+huge | 100%
+
+In case no size is specified shapes are drawn with 75% of a cells width / height.
+
+
+
+The order in which shape properties are specified is irrelevant. In case two competing properties are specified for the same shape, the last one (i.e. the one closest to the shape) wins.
 
 ### Text
 
