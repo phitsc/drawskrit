@@ -57,9 +57,9 @@ function Drawing(canvas)  {
 
         smile: function(centerPt, halfWidth, halfHeight, fillMode) {
             ctx.beginPath();
-            ctx.moveTo(centerPt.x - halfWidth, centerPt.y - halfHeight / 2);
-            ctx.bezierCurveTo(centerPt.x - halfWidth, centerPt.y + halfHeight, centerPt.x + halfWidth, centerPt.y + halfHeight, centerPt.x + halfWidth, centerPt.y - halfHeight / 2);
-            ctx.bezierCurveTo(centerPt.x + halfWidth, centerPt.y, centerPt.x - halfWidth, centerPt.y, centerPt.x - halfWidth, centerPt.y - halfHeight / 2);
+            ctx.moveTo(centerPt.x - halfWidth, centerPt.y - halfHeight);
+            ctx.bezierCurveTo(centerPt.x - halfWidth, centerPt.y + halfHeight, centerPt.x + halfWidth, centerPt.y + halfHeight, centerPt.x + halfWidth, centerPt.y - halfHeight);
+            ctx.bezierCurveTo(centerPt.x + halfWidth, centerPt.y, centerPt.x - halfWidth, centerPt.y, centerPt.x - halfWidth, centerPt.y - halfHeight);
             if (fillMode == "filled") ctx.fill();
             ctx.stroke();
         },
