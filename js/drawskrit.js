@@ -134,7 +134,7 @@ function Drawing(canvas)  {
         rows.forEach(function(row) {
             var trimmedRow = row.trim();
 
-            if (trimmedRow.substr(0, 1) == '-') return; // ignore comments
+            if (trimmedRow.substr(0, 1) == ';') return; // ignore comments
 
             if (trimmedRow.substr(0, 1) == '=') { // new layer
                 layers.push(instructions);
