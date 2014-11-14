@@ -113,6 +113,7 @@ function Drawing(canvas)  {
     var Default = {
         BACKGROUND: "white",
         COLOR: "black",
+        SIZE: "",
         LINE_STYLE: "solid",
         LINE_WIDTH: "thin",
         FILL_MODE: "empty"
@@ -234,6 +235,7 @@ function Drawing(canvas)  {
                     metaInstructions[token] = {
                         shape: token,
                         color: properties.color || Default.COLOR,
+                        size: properties.size || Default.SIZE,
                         lineStyle: properties.lineStyle || Default.LINE_STYLE,
                         lineWidth: properties.lineWidth || Default.LINE_WIDTH,
                         fillMode: properties.fillMode || Default.FILL_MODE };
@@ -475,6 +477,7 @@ function Drawing(canvas)  {
     function renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
         if (instruction.shape == "shapes") {
             canvas.defaultColor = instruction.color;
+            canvas.defaultSize = instruction.size;
             canvas.defaultLineStyle = instruction.lineStyle;
             canvas.defaultLineWidth = instruction.lineWidth;
             canvas.defaultFillMode = instruction.fillMode;
@@ -490,49 +493,49 @@ function Drawing(canvas)  {
             case "square":
             case "squares":
                 drawing.square(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    Math.min(calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size)),
+                    Math.min(calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize)),
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "rectangle":
             case "rectangles":
                 drawing.rectangle(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size) * 0.8,
+                    calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize) * 0.8,
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "circle":
             case "circles":
                 drawing.circle(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    Math.min(calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size)),
+                    Math.min(calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize)),
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "ellipse":
             case "ellipses":
                 drawing.ellipse(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size) * 0.8,
+                    calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize) * 0.8,
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "smile":
             case "smiles":
                 drawing.smile(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size) * 0.8,
+                    calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize) * 0.8,
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "triangle":
             case "triangles":
                 drawing.triangle(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    Math.min(calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size)),
+                    Math.min(calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize)),
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "line":
             case "lines":
                 drawing.line(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    calcRadius(canvas.width, columnCount, instruction.size));
+                    calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize));
                 break;
         }
 
@@ -540,7 +543,7 @@ function Drawing(canvas)  {
             drawing.setFillStyle(instruction.textColor || canvas.defaultColor);
             drawing.setFont(calcFontSize(rowCount, columnCount, instruction.size) + "pt Arial");
             drawing.fillText(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                Math.min(calcRadius(canvas.width, columnCount, instruction.size), calcRadius(canvas.height, rowCount, instruction.size)),
+                Math.min(calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize)),
                 instruction.text);
         }
     }
