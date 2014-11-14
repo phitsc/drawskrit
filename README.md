@@ -10,7 +10,7 @@ Drawskrit is a description language for simple drawings and diagrams.
 * every line of text specifies a row of the grid
 * every shape specifies a column of the grid
 * each cell can only contain a single shape (but see layers)
-* everything before a shape describes the shape (but see meta instructions and text peculiarities)
+* everything before a shape describes the shape (but see meta instructions and text label peculiarities)
 * shapes resize depending on the total number of rows / columns (but see layers)
 * all description is case-insensitive
 * lines are stripped, i.e. leading and trailing whitespace is removed before the line is processed
@@ -79,6 +79,8 @@ Notice that all shapes can also be specified in their plural form.
 
 Shapes can be specified with various properties in order to change their color, size, filling and line style.
 
+The order in which shape properties are specified is irrelevant. In case two competing properties are specified for the same shape, the last one (i.e. the one closest to the shape) wins.
+
 #### Color
 
 Valid color specifiers are:
@@ -91,18 +93,50 @@ Valid size specifiers are:
 
 Size | % if cell width / height
 :---:|:------:
-tiny | 25%
-small | 50%
-big   | 85%
-huge | 100%
+`tiny` | 25%
+`small` | 50%
+`big`   | 85%
+`huge` | 100%
 
 In case no size is specified shapes are drawn with 75% of a cells width / height.
 
+#### Line style
 
+Valid line styles are:
 
-The order in which shape properties are specified is irrelevant. In case two competing properties are specified for the same shape, the last one (i.e. the one closest to the shape) wins.
+* `solid` (default)
+* `dotted`
+* `dashed`
 
-### Text
+#### Line width
+
+Valid line widths are:
+
+Line width | No. pixels
+:---------:|:-------:
+`thin` (default) | 1
+`thick` | 4
+`fat` | 8
+
+#### Fill mode
+
+Adding the `filled` specifier before a shape will fill the respective shape.
+
+### Text labels
+
+Text specified in single or double quotes is considered to be a label for the following shape. It is drawn in the shapes center.
+
+The text "Drawskript" (without the quotes) drawn centered in an ellipse:
+
+```
+"Drawskript" ellipse
+```
+
+When drawing multiple shapes using shape cardinality it is possible to specify a different label for each one of them:
+
+```
+"Drawskript" "rules" 2 rectangles
+```
 
 
 ### Comments
@@ -151,3 +185,4 @@ purple circle red square green triangle
 ```
 
 ### Layers
+
