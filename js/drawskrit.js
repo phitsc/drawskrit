@@ -31,37 +31,49 @@ function Drawing(canvas)  {
             ctx.font = value;
         },
 
-        rectangle: function(centerPt, halfWidth, halfHeight, fillMode) {
-            ctx.beginPath();
-            ctx.rect(centerPt.x - halfWidth, centerPt.y - halfHeight, 2 * halfWidth, 2 * halfHeight);
-            if (fillMode == "filled") ctx.fill();
-            ctx.stroke();
-        },
-
         fillRectangle: function(centerPt, halfWidth, halfHeight) {
             ctx.fillRect(centerPt.x - halfWidth, centerPt.y - halfHeight, 2 * halfWidth, 2 * halfHeight);
         },
 
-        square: function(centerPt, r, fillMode) {
-            this.rectangle(centerPt, r, r, fillMode);
-        },
-
-        ellipse: function(centerPt, halfWidth, halfHeight, fillMode) {
+        rectangle: function(centerPt, halfWidth, halfHeight, fillMode, rotation) {
+            ctx.save();
+            ctx.translate(centerPt.x, centerPt.y);
+            ctx.rotate(rotation * Math.PI / 180);
             ctx.beginPath();
-            ctx.moveTo(centerPt.x - halfWidth, centerPt.y);
-            ctx.bezierCurveTo(centerPt.x - halfWidth, centerPt.y - halfHeight, centerPt.x + halfWidth, centerPt.y - halfHeight, centerPt.x + halfWidth, centerPt.y);
-            ctx.bezierCurveTo(centerPt.x + halfWidth, centerPt.y + halfHeight, centerPt.x - halfWidth, centerPt.y + halfHeight, centerPt.x - halfWidth, centerPt.y);
+            ctx.rect(0 - halfWidth, 0 - halfHeight, 2 * halfWidth, 2 * halfHeight);
             if (fillMode == "filled") ctx.fill();
             ctx.stroke();
+            ctx.restore();
         },
 
-        smile: function(centerPt, halfWidth, halfHeight, fillMode) {
+        square: function(centerPt, r, fillMode, rotation) {
+            this.rectangle(centerPt, r, r, fillMode, rotation);
+        },
+
+        ellipse: function(centerPt, halfWidth, halfHeight, fillMode, rotation) {
+            ctx.save();
+            ctx.translate(centerPt.x, centerPt.y);
+            ctx.rotate(rotation * Math.PI / 180);
             ctx.beginPath();
-            ctx.moveTo(centerPt.x - halfWidth, centerPt.y - halfHeight);
-            ctx.bezierCurveTo(centerPt.x - halfWidth, centerPt.y + halfHeight, centerPt.x + halfWidth, centerPt.y + halfHeight, centerPt.x + halfWidth, centerPt.y - halfHeight);
-            ctx.bezierCurveTo(centerPt.x + halfWidth, centerPt.y, centerPt.x - halfWidth, centerPt.y, centerPt.x - halfWidth, centerPt.y - halfHeight);
+            ctx.moveTo(0 - halfWidth, 0);
+            ctx.bezierCurveTo(0 - halfWidth, 0 - halfHeight, 0 + halfWidth, 0 - halfHeight, 0 + halfWidth, 0);
+            ctx.bezierCurveTo(0 + halfWidth, 0 + halfHeight, 0 - halfWidth, 0 + halfHeight, 0 - halfWidth, 0);
             if (fillMode == "filled") ctx.fill();
             ctx.stroke();
+            ctx.restore();
+        },
+
+        smile: function(centerPt, halfWidth, halfHeight, fillMode, rotation) {
+            ctx.save();
+            ctx.translate(centerPt.x, centerPt.y);
+            ctx.rotate(rotation * Math.PI / 180);
+            ctx.beginPath();
+            ctx.moveTo(0 - halfWidth, 0 - halfHeight);
+            ctx.bezierCurveTo(0 - halfWidth, 0 + halfHeight, 0 + halfWidth, 0 + halfHeight, 0 + halfWidth, 0 - halfHeight);
+            ctx.bezierCurveTo(0 + halfWidth, 0, 0 - halfWidth, 0, 0 - halfWidth, 0 - halfHeight);
+            if (fillMode == "filled") ctx.fill();
+            ctx.stroke();
+            ctx.restore();
         },
 
         circle: function(centerPt, r, fillMode) {
@@ -71,25 +83,37 @@ function Drawing(canvas)  {
             ctx.stroke();
         },
 
-        triangle: function(centerPt, r, fillMode) {
+        triangle: function(centerPt, r, fillMode, rotation) {
+            ctx.save();
+            ctx.translate(centerPt.x, centerPt.y);
+            ctx.rotate(rotation * Math.PI / 180);
             ctx.beginPath();
-            ctx.moveTo(centerPt.x, centerPt.y - r);
-            ctx.lineTo(centerPt.x + r, centerPt.y + r);
-            ctx.lineTo(centerPt.x - r, centerPt.y + r);
-            ctx.lineTo(centerPt.x, centerPt.y - r);
+            ctx.moveTo(0, 0 - r);
+            ctx.lineTo(0 + r, 0 + r);
+            ctx.lineTo(0 - r, 0 + r);
+            ctx.lineTo(0, 0 - r);
             if (fillMode == "filled") ctx.fill();
             ctx.stroke();
+            ctx.restore();
         },
 
-        line: function(centerPt, r) {
+        line: function(centerPt, r, rotation) {
+            ctx.save();
+            ctx.translate(centerPt.x, centerPt.y);
+            ctx.rotate(rotation * Math.PI / 180);
             ctx.beginPath();
-            ctx.moveTo(centerPt.x - r, centerPt.y);
-            ctx.lineTo(centerPt.x + r, centerPt.y);
+            ctx.moveTo(0 - r, 0);
+            ctx.lineTo(0 + r, 0);
             ctx.stroke();
+            ctx.restore();
         },
 
-        fillText: function(centerPt, r, text) {
-            ctx.fillText(text, centerPt.x, centerPt.y, 2 * r);
+        fillText: function(centerPt, r, text, rotation) {
+            ctx.save();
+            ctx.translate(centerPt.x, centerPt.y);
+            ctx.rotate(rotation * Math.PI / 180);
+            ctx.fillText(text, 0, 0, 2 * r);
+            ctx.restore();
         }
     }
 };
@@ -116,7 +140,8 @@ function Drawing(canvas)  {
         SIZE: "",
         LINE_STYLE: "solid",
         LINE_WIDTH: "thin",
-        FILL_MODE: "empty"
+        FILL_MODE: "empty",
+        ORIENTATION: "horizontal"
     };
 
     /*
@@ -165,10 +190,12 @@ function Drawing(canvas)  {
         return {
             color: null,
             textColor:  null,
+            textRotation: null,
             size: null,
             lineStyle: null,
             lineWidth: null,
             fillMode: null,
+            orientation: null,
             cardinality: 1,
             texts: new Array()
         };
@@ -206,8 +233,6 @@ function Drawing(canvas)  {
             values.push(value);
         }
 
-        console.log(values);
-
         return values;
     }
 
@@ -238,7 +263,9 @@ function Drawing(canvas)  {
                         size: properties.size || Default.SIZE,
                         lineStyle: properties.lineStyle || Default.LINE_STYLE,
                         lineWidth: properties.lineWidth || Default.LINE_WIDTH,
-                        fillMode: properties.fillMode || Default.FILL_MODE };
+                        fillMode: properties.fillMode || Default.FILL_MODE,
+                        orientation: properties.orientation || Default.ORIENTATION
+                    };
                     properties = newProperties();
                     return;
 
@@ -257,10 +284,12 @@ function Drawing(canvas)  {
                             text: properties.texts.length > i ? properties.texts[i] : null,
                             color: properties.color,
                             textColor: properties.textColor,
+                            textOrientation: properties.textOrientation,
                             size: properties.size,
                             lineStyle: properties.lineStyle,
                             lineWidth: properties.lineWidth,
                             fillMode: properties.fillMode,
+                            orientation: properties.orientation,
                             shape: token
                         });
                     };
@@ -289,13 +318,23 @@ function Drawing(canvas)  {
                 case "filled": case "empty":
                     properties.fillMode = token;
                     return;
+
+                case "horizontal": case "vertical":
+                    properties.orientation = token;
+                    return;
             }
 
             if (token.search(/^".*"$/) == 0 || token.search(/^'.*'$/) == 0) {
                 properties.texts.push(token_.substr(1, token_.length - 2));
+
                 if (properties.color != null) {
                     properties.textColor = properties.color;
                     properties.color = null;
+                }
+
+                if (properties.orientation != null) {
+                    properties.textOrientation = properties.orientation;
+                    properties.orientation = null;
                 }
             }
 
@@ -423,16 +462,18 @@ function Drawing(canvas)  {
     }
 
     function calcHalfRect(width, height, columnCount, rowCount, size, orientation) {
-        var w = calcRadius(width, columnCount, size);
-        var h = calcRadius(height, rowCount, size);
-
         if (orientation == "vertical") {
+            var w = calcRadius(height, rowCount, size);
+            var h = calcRadius(width, columnCount, size);
         } else {
-            if (w >= h) {
-                return { halfWidth: w, halfHeight: h * 0.8 };
-            } else {
-                return { halfWidth: w, halfHeight: w * 0.8 };
-            }
+            var w = calcRadius(width, columnCount, size);
+            var h = calcRadius(height, rowCount, size);
+        }
+
+        if (w >= h) {
+            return { halfWidth: w, halfHeight: h * 0.8 };
+        } else {
+            return { halfWidth: w, halfHeight: w * 0.8 };
         }
     }
 
@@ -495,6 +536,7 @@ function Drawing(canvas)  {
             canvas.defaultLineStyle = instruction.lineStyle;
             canvas.defaultLineWidth = instruction.lineWidth;
             canvas.defaultFillMode = instruction.fillMode;
+            canvas.defaultOrientation = instruction.orientation;
             return;
         }
 
@@ -513,9 +555,9 @@ function Drawing(canvas)  {
 
             case "rectangle":
             case "rectangles":
-                var rect = calcHalfRect(canvas.width, canvas.height, columnCount, rowCount, instruction.size || canvas.defaultSize, "horizontal");
+                var rect = calcHalfRect(canvas.width, canvas.height, columnCount, rowCount, instruction.size || canvas.defaultSize, instruction.orientation || canvas.defaultOrientation);
                 drawing.rectangle(calcCenter(currentRow, currentColumn, rowCount, columnCount), rect.halfWidth, rect.halfHeight,
-                    instruction.fillMode || canvas.defaultFillMode);
+                    instruction.fillMode || canvas.defaultFillMode, (instruction.orientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
                 break;
 
             case "circle":
@@ -527,29 +569,29 @@ function Drawing(canvas)  {
 
             case "ellipse":
             case "ellipses":
-                var rect = calcHalfRect(canvas.width, canvas.height, columnCount, rowCount, instruction.size || canvas.defaultSize, "horizontal");
+                var rect = calcHalfRect(canvas.width, canvas.height, columnCount, rowCount, instruction.size || canvas.defaultSize, instruction.orientation || canvas.defaultOrientation);
                 drawing.ellipse(calcCenter(currentRow, currentColumn, rowCount, columnCount), rect.halfWidth, rect.halfHeight,
-                    instruction.fillMode || canvas.defaultFillMode);
+                    instruction.fillMode || canvas.defaultFillMode, (instruction.orientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
                 break;
 
             case "smile":
             case "smiles":
-                var rect = calcHalfRect(canvas.width, canvas.height, columnCount, rowCount, instruction.size || canvas.defaultSize, "horizontal");
+                var rect = calcHalfRect(canvas.width, canvas.height, columnCount, rowCount, instruction.size || canvas.defaultSize, instruction.orientation || canvas.defaultOrientation);
                 drawing.smile(calcCenter(currentRow, currentColumn, rowCount, columnCount), rect.halfWidth, rect.halfHeight,
-                    instruction.fillMode || canvas.defaultFillMode);
+                    instruction.fillMode || canvas.defaultFillMode, (instruction.orientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
                 break;
 
             case "triangle":
             case "triangles":
                 drawing.triangle(calcCenter(currentRow, currentColumn, rowCount, columnCount),
                     Math.min(calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize)),
-                    instruction.fillMode || canvas.defaultFillMode);
+                    instruction.fillMode || canvas.defaultFillMode, (instruction.orientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
                 break;
 
             case "line":
             case "lines":
                 drawing.line(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize));
+                    calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), (instruction.orientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
                 break;
         }
 
@@ -558,7 +600,7 @@ function Drawing(canvas)  {
             drawing.setFont(calcFontSize(rowCount, columnCount, instruction.size) + "pt Arial");
             drawing.fillText(calcCenter(currentRow, currentColumn, rowCount, columnCount),
                 Math.min(calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize)),
-                instruction.text);
+                instruction.text, (instruction.textOrientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
         }
     }
 
