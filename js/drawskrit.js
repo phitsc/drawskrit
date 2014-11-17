@@ -422,6 +422,20 @@ function Drawing(canvas)  {
         return canvasSize / count / 2 * factor(size);
     }
 
+    function calcHalfRect(width, height, columnCount, rowCount, size, orientation) {
+        var w = calcRadius(width, columnCount, size);
+        var h = calcRadius(height, rowCount, size);
+
+        if (orientation == "vertical") {
+        } else {
+            if (w >= h) {
+                return { halfWidth: w, halfHeight: h * 0.8 };
+            } else {
+                return { halfWidth: w, halfHeight: w * 0.8 };
+            }
+        }
+    }
+
     function calcFontSize(rowCount, columnCount, size) {
         return Math.min(canvas.width / columnCount / 8, canvas.height / rowCount / 8) * factor(size);
     }
@@ -499,8 +513,8 @@ function Drawing(canvas)  {
 
             case "rectangle":
             case "rectangles":
-                drawing.rectangle(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize) * 0.8,
+                var rect = calcHalfRect(canvas.width, canvas.height, columnCount, rowCount, instruction.size || canvas.defaultSize, "horizontal");
+                drawing.rectangle(calcCenter(currentRow, currentColumn, rowCount, columnCount), rect.halfWidth, rect.halfHeight,
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
@@ -513,15 +527,15 @@ function Drawing(canvas)  {
 
             case "ellipse":
             case "ellipses":
-                drawing.ellipse(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize) * 0.8,
+                var rect = calcHalfRect(canvas.width, canvas.height, columnCount, rowCount, instruction.size || canvas.defaultSize, "horizontal");
+                drawing.ellipse(calcCenter(currentRow, currentColumn, rowCount, columnCount), rect.halfWidth, rect.halfHeight,
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "smile":
             case "smiles":
-                drawing.smile(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize) * 0.8,
+                var rect = calcHalfRect(canvas.width, canvas.height, columnCount, rowCount, instruction.size || canvas.defaultSize, "horizontal");
+                drawing.smile(calcCenter(currentRow, currentColumn, rowCount, columnCount), rect.halfWidth, rect.halfHeight,
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
