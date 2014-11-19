@@ -250,7 +250,7 @@ function Drawing(canvas)  {
             var token = translateSymbols(token_).toLowerCase();
 
             /*
-            Shapes
+            Shapes & meta instructions
             */
             switch (token) {
                 case "background":
