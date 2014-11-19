@@ -235,6 +235,26 @@ function Drawing(canvas)  {
         return values;
     }
 
+    function appendDrawingInstruction(drawingInstructions, newDrawingInstruction, composition) {
+        if (composition) {
+            var lastDrawingInstruction = drawingInstructions.pop();
+
+            if (Array.isArray(lastDrawingInstruction)) {
+                lastDrawingInstruction.push(newDrawingInstruction);
+                drawingInstructions.push(lastDrawingInstruction);
+            } else {
+                var drawingInstruction = new Array();
+                drawingInstruction.push(lastDrawingInstruction);
+                drawingInstruction.push(newDrawingInstruction);
+                drawingInstructions.push(drawingInstruction);
+            }
+        }
+        else
+        {
+            drawingInstructions.push(newDrawingInstruction);
+        }
+    }
+
     /*
     Parse a single row of text.
     Returns an array of meta instructions and an array of drawing instructions.
@@ -244,10 +264,23 @@ function Drawing(canvas)  {
         var drawingInstructions = new Array();
         var properties = newProperties();
 
+        var afterShape = false;
+        var composition = false;
+
         var tokens = split(row);
 
         tokens.forEach(function(token_) {
             var token = translateSymbols(token_).toLowerCase();
+
+            /*
+            Composition
+            */
+            if (token == "on" && afterShape) {
+                composition = true;
+                return;
+            }
+
+            afterShape = false;
 
             /*
             Shapes & meta instructions
@@ -282,7 +315,7 @@ function Drawing(canvas)  {
                 case "square": case "rectangle": case "circle": case "ellipse": case "triangle": case "line": case "smile":
                 case "squares": case "rectangles": case "circles": case "ellipses": case "triangles": case "lines": case "smiles":
                     for (var i = 0; i < properties.cardinality; i++) {
-                        drawingInstructions.push({
+                        appendDrawingInstruction(drawingInstructions, {
                             color:       properties.color,
                             size:        properties.size,
                             lineStyle:   properties.lineStyle,
@@ -290,9 +323,11 @@ function Drawing(canvas)  {
                             fillMode:    properties.fillMode,
                             orientation: properties.orientation,
                             shape:       token
-                        });
+                        }, composition);
                     };
-                    properties = newProperties();
+                    properties  = newProperties();
+                    afterShape  = true;
+                    composition = false;
                     return;
             }
 
@@ -301,15 +336,17 @@ function Drawing(canvas)  {
             */
             if (token.search(/^".*"$/) == 0 || token.search(/^'.*'$/) == 0) {
                 for (var i = 0; i < properties.cardinality; i++) {
-                    drawingInstructions.push({
+                    appendDrawingInstruction(drawingInstructions, {
                         color:       properties.color,
                         size:        properties.size,
                         orientation: properties.orientation,
                         text:        token_.substr(1, token_.length - 2),
                         shape:       "label"
-                    });
+                    }, composition);
                 };
-                properties = newProperties();
+                properties  = newProperties();
+                afterShape  = true;
+                composition = false;
                 return;
             }
 
@@ -421,7 +458,14 @@ function Drawing(canvas)  {
 
         var currentColumn = 0;
         rowInstructions.drawingInstructions.forEach(function(instruction) {
-            renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount);
+            if (Array.isArray(instruction)) {
+                instruction.reverse().forEach(function(instr) {
+                    renderInstruction(instr, currentRow, currentColumn, rowCount, columnCount);
+                })
+            } else {
+                renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount);
+            }
+
             currentColumn++;
         });
     }
