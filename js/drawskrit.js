@@ -3,8 +3,10 @@
 function Drawing(canvas)  {
     var ctx = canvas.getContext('2d');
 
-    ctx.textAlign = "center";
+    ctx.textAlign    = "center";
     ctx.textBaseline = "middle";
+    ctx.lineJoin     = "round";
+    ctx.lineCap      = "round";
 
     return {
         clear: function() {
@@ -188,20 +190,17 @@ function Drawing(canvas)  {
 
     function newProperties() {
         return {
-            color: null,
-            textColor:  null,
-            textRotation: null,
-            size: null,
-            lineStyle: null,
-            lineWidth: null,
-            fillMode: null,
+            color:       null,
+            size:        null,
+            lineStyle:   null,
+            lineWidth:   null,
+            fillMode:    null,
             orientation: null,
-            cardinality: 1,
-            texts: new Array()
+            cardinality: 1
         };
     }
 
-    function splitSpaceOrQuotes(line) {
+    function split(line) {
 
         var values = new Array();
 
@@ -245,11 +244,14 @@ function Drawing(canvas)  {
         var drawingInstructions = new Array();
         var properties = newProperties();
 
-        var tokens = splitSpaceOrQuotes(row);
+        var tokens = split(row);
 
         tokens.forEach(function(token_) {
             var token = translateSymbols(token_).toLowerCase();
 
+            /*
+            Shapes
+            */
             switch (token) {
                 case "background":
                     metaInstructions[token] = { color: properties.color, shape: token };
@@ -258,12 +260,12 @@ function Drawing(canvas)  {
 
                 case "shapes":
                     metaInstructions[token] = {
-                        shape: token,
-                        color: properties.color || Default.COLOR,
-                        size: properties.size || Default.SIZE,
-                        lineStyle: properties.lineStyle || Default.LINE_STYLE,
-                        lineWidth: properties.lineWidth || Default.LINE_WIDTH,
-                        fillMode: properties.fillMode || Default.FILL_MODE,
+                        shape:       token,
+                        color:       properties.color       || Default.COLOR,
+                        size:        properties.size        || Default.SIZE,
+                        lineStyle:   properties.lineStyle   || Default.LINE_STYLE,
+                        lineWidth:   properties.lineWidth   || Default.LINE_WIDTH,
+                        fillMode:    properties.fillMode    || Default.FILL_MODE,
                         orientation: properties.orientation || Default.ORIENTATION
                     };
                     properties = newProperties();
@@ -281,22 +283,39 @@ function Drawing(canvas)  {
                 case "squares": case "rectangles": case "circles": case "ellipses": case "triangles": case "lines": case "smiles":
                     for (var i = 0; i < properties.cardinality; i++) {
                         drawingInstructions.push({
-                            text: properties.texts.length > i ? properties.texts[i] : null,
-                            color: properties.color,
-                            textColor: properties.textColor,
-                            textOrientation: properties.textOrientation,
-                            size: properties.size,
-                            lineStyle: properties.lineStyle,
-                            lineWidth: properties.lineWidth,
-                            fillMode: properties.fillMode,
+                            color:       properties.color,
+                            size:        properties.size,
+                            lineStyle:   properties.lineStyle,
+                            lineWidth:   properties.lineWidth,
+                            fillMode:    properties.fillMode,
                             orientation: properties.orientation,
-                            shape: token
+                            shape:       token
                         });
                     };
                     properties = newProperties();
                     return;
             }
 
+            /*
+            Text label shape
+            */
+            if (token.search(/^".*"$/) == 0 || token.search(/^'.*'$/) == 0) {
+                for (var i = 0; i < properties.cardinality; i++) {
+                    drawingInstructions.push({
+                        color:       properties.color,
+                        size:        properties.size,
+                        orientation: properties.orientation,
+                        text:        token_.substr(1, token_.length - 2),
+                        shape:       "label"
+                    });
+                };
+                properties = newProperties();
+                return;
+            }
+
+            /*
+            Properties
+            */
             switch (token) {
                 case "aqua": case "black": case "blue": case "fuchsia": case "gray": case "green": case "lime":  case "maroon": case "navy":
                 case "olive": case "orange": case "purple": case "red": case "silver": case "teal": case "white": case "yellow":
@@ -322,20 +341,6 @@ function Drawing(canvas)  {
                 case "horizontal": case "vertical":
                     properties.orientation = token;
                     return;
-            }
-
-            if (token.search(/^".*"$/) == 0 || token.search(/^'.*'$/) == 0) {
-                properties.texts.push(token_.substr(1, token_.length - 2));
-
-                if (properties.color != null) {
-                    properties.textColor = properties.color;
-                    properties.color = null;
-                }
-
-                if (properties.orientation != null) {
-                    properties.textOrientation = properties.orientation;
-                    properties.orientation = null;
-                }
             }
 
             if (!isNaN(token)) {
@@ -531,11 +536,11 @@ function Drawing(canvas)  {
     */
     function renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
         if (instruction.shape == "shapes") {
-            canvas.defaultColor = instruction.color;
-            canvas.defaultSize = instruction.size;
-            canvas.defaultLineStyle = instruction.lineStyle;
-            canvas.defaultLineWidth = instruction.lineWidth;
-            canvas.defaultFillMode = instruction.fillMode;
+            canvas.defaultColor       = instruction.color;
+            canvas.defaultSize        = instruction.size;
+            canvas.defaultLineStyle   = instruction.lineStyle;
+            canvas.defaultLineWidth   = instruction.lineWidth;
+            canvas.defaultFillMode    = instruction.fillMode;
             canvas.defaultOrientation = instruction.orientation;
             return;
         }
@@ -593,14 +598,13 @@ function Drawing(canvas)  {
                 drawing.line(calcCenter(currentRow, currentColumn, rowCount, columnCount),
                     calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), (instruction.orientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
                 break;
-        }
 
-        if (instruction.text) {
-            drawing.setFillStyle(instruction.textColor || canvas.defaultColor);
-            drawing.setFont(calcFontSize(rowCount, columnCount, instruction.size) + "pt Arial");
-            drawing.fillText(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                Math.min(calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize)),
-                instruction.text, (instruction.textOrientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
+            case "label":
+                drawing.setFont(calcFontSize(rowCount, columnCount, instruction.size) + "pt Arial");
+                drawing.fillText(calcCenter(currentRow, currentColumn, rowCount, columnCount),
+                    Math.min(calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize)),
+                    instruction.text, (instruction.orientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
+                break;
         }
     }
 
