@@ -530,7 +530,7 @@ function Drawing(canvas)  {
     }
 
     function calcFontSize(rect, rowCount, columnCount, size) {
-        return Math.min((rect.right - rect.left) / columnCount / 8, (rect.bottom - rect.top) / rowCount / 8) * factor(size);
+        return Math.min((rect.right - rect.left) / columnCount / 2, (rect.bottom - rect.top) / rowCount / 2) * factor(size);
     }
 
     function calcLineWidth(lineWidth) {
@@ -597,7 +597,7 @@ function Drawing(canvas)  {
         setLineStyle(instruction.lineStyle || canvas.defaultLineStyle, instruction.lineWidth || canvas.defaultLineWidth);
         setLineWidth(instruction.lineWidth || canvas.defaultLineWidth);
 
-        var rect = { left: 150, top: 0, right: canvas.width, bottom: canvas.height };
+        var rect = { left: 0, top: 0, right: canvas.width, bottom: canvas.height };
         var width = rect.right - rect.left;
         var height = rect.bottom - rect.top;
 
