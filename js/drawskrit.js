@@ -473,13 +473,13 @@ function Drawing(canvas)  {
     /*
     Calculate the center of a shape
     */
-    function calcCenter(currentRow, currentColumn, rowCount, columnCount) {
-        var cellWidth = canvas.width / columnCount;
-        var cellHeight = canvas.height / rowCount;
+    function calcCenter(rect, currentRow, currentColumn, rowCount, columnCount) {
+        var cellWidth = (rect.right - rect.left) / columnCount;
+        var cellHeight = (rect.bottom - rect.top) / rowCount;
 
         return {
-            x: currentColumn * cellWidth + cellWidth / 2,
-            y: currentRow * cellHeight + cellHeight / 2
+            x: rect.left + (currentColumn * cellWidth + cellWidth / 2),
+            y: rect.top + (currentRow * cellHeight + cellHeight / 2)
         };
     }
 
@@ -510,7 +510,10 @@ function Drawing(canvas)  {
         return canvasSize / count / 2 * factor(size);
     }
 
-    function calcHalfRect(width, height, columnCount, rowCount, size, orientation) {
+    function calcHalfRect(rect, columnCount, rowCount, size, orientation) {
+        var width = rect.right - rect.left;
+        var height = rect.bottom - rect.top;
+
         if (orientation == "vertical") {
             var w = calcRadius(height, rowCount, size);
             var h = calcRadius(width, columnCount, size);
@@ -526,8 +529,8 @@ function Drawing(canvas)  {
         }
     }
 
-    function calcFontSize(rowCount, columnCount, size) {
-        return Math.min(canvas.width / columnCount / 8, canvas.height / rowCount / 8) * factor(size);
+    function calcFontSize(rect, rowCount, columnCount, size) {
+        return Math.min((rect.right - rect.left) / columnCount / 8, (rect.bottom - rect.top) / rowCount / 8) * factor(size);
     }
 
     function calcLineWidth(lineWidth) {
@@ -594,59 +597,63 @@ function Drawing(canvas)  {
         setLineStyle(instruction.lineStyle || canvas.defaultLineStyle, instruction.lineWidth || canvas.defaultLineWidth);
         setLineWidth(instruction.lineWidth || canvas.defaultLineWidth);
 
+        var rect = { left: 150, top: 0, right: canvas.width, bottom: canvas.height };
+        var width = rect.right - rect.left;
+        var height = rect.bottom - rect.top;
+
         switch (instruction.shape) {
             case "square":
             case "squares":
-                drawing.square(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    Math.min(calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize)),
+                drawing.square(calcCenter(rect, currentRow, currentColumn, rowCount, columnCount),
+                    Math.min(calcRadius(width, columnCount, instruction.size || canvas.defaultSize), calcRadius(height, rowCount, instruction.size || canvas.defaultSize)),
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "rectangle":
             case "rectangles":
-                var rect = calcHalfRect(canvas.width, canvas.height, columnCount, rowCount, instruction.size || canvas.defaultSize, instruction.orientation || canvas.defaultOrientation);
-                drawing.rectangle(calcCenter(currentRow, currentColumn, rowCount, columnCount), rect.halfWidth, rect.halfHeight,
+                var halfRect = calcHalfRect(rect, columnCount, rowCount, instruction.size || canvas.defaultSize, instruction.orientation || canvas.defaultOrientation);
+                drawing.rectangle(calcCenter(rect, currentRow, currentColumn, rowCount, columnCount), halfRect.halfWidth, halfRect.halfHeight,
                     instruction.fillMode || canvas.defaultFillMode, (instruction.orientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
                 break;
 
             case "circle":
             case "circles":
-                drawing.circle(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    Math.min(calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize)),
+                drawing.circle(calcCenter(rect, currentRow, currentColumn, rowCount, columnCount),
+                    Math.min(calcRadius(width, columnCount, instruction.size || canvas.defaultSize), calcRadius(height, rowCount, instruction.size || canvas.defaultSize)),
                     instruction.fillMode || canvas.defaultFillMode);
                 break;
 
             case "ellipse":
             case "ellipses":
-                var rect = calcHalfRect(canvas.width, canvas.height, columnCount, rowCount, instruction.size || canvas.defaultSize, instruction.orientation || canvas.defaultOrientation);
-                drawing.ellipse(calcCenter(currentRow, currentColumn, rowCount, columnCount), rect.halfWidth, rect.halfHeight,
+                var halfRect = calcHalfRect(rect, columnCount, rowCount, instruction.size || canvas.defaultSize, instruction.orientation || canvas.defaultOrientation);
+                drawing.ellipse(calcCenter(rect, currentRow, currentColumn, rowCount, columnCount), halfRect.halfWidth, halfRect.halfHeight,
                     instruction.fillMode || canvas.defaultFillMode, (instruction.orientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
                 break;
 
             case "smile":
             case "smiles":
-                var rect = calcHalfRect(canvas.width, canvas.height, columnCount, rowCount, instruction.size || canvas.defaultSize, instruction.orientation || canvas.defaultOrientation);
-                drawing.smile(calcCenter(currentRow, currentColumn, rowCount, columnCount), rect.halfWidth, rect.halfHeight,
+                var halfRect = calcHalfRect(rect, columnCount, rowCount, instruction.size || canvas.defaultSize, instruction.orientation || canvas.defaultOrientation);
+                drawing.smile(calcCenter(rect, currentRow, currentColumn, rowCount, columnCount), halfRect.halfWidth, halfRect.halfHeight,
                     instruction.fillMode || canvas.defaultFillMode, (instruction.orientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
                 break;
 
             case "triangle":
             case "triangles":
-                drawing.triangle(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    Math.min(calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize)),
+                drawing.triangle(calcCenter(rect, currentRow, currentColumn, rowCount, columnCount),
+                    Math.min(calcRadius(width, columnCount, instruction.size || canvas.defaultSize), calcRadius(height, rowCount, instruction.size || canvas.defaultSize)),
                     instruction.fillMode || canvas.defaultFillMode, (instruction.orientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
                 break;
 
             case "line":
             case "lines":
-                drawing.line(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), (instruction.orientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
+                drawing.line(calcCenter(rect, currentRow, currentColumn, rowCount, columnCount),
+                    calcRadius(width, columnCount, instruction.size || canvas.defaultSize), (instruction.orientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
                 break;
 
             case "label":
-                drawing.setFont(calcFontSize(rowCount, columnCount, instruction.size) + "pt Arial");
-                drawing.fillText(calcCenter(currentRow, currentColumn, rowCount, columnCount),
-                    Math.min(calcRadius(canvas.width, columnCount, instruction.size || canvas.defaultSize), calcRadius(canvas.height, rowCount, instruction.size || canvas.defaultSize)),
+                drawing.setFont(calcFontSize(rect, rowCount, columnCount, instruction.size) + "pt Arial");
+                drawing.fillText(calcCenter(rect, currentRow, currentColumn, rowCount, columnCount),
+                    Math.min(calcRadius(width, columnCount, instruction.size || canvas.defaultSize), calcRadius(height, rowCount, instruction.size || canvas.defaultSize)),
                     instruction.text, (instruction.orientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
                 break;
         }
