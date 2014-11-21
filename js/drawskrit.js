@@ -3,8 +3,6 @@
 function Drawing(canvas)  {
     var ctx = canvas.getContext('2d');
 
-    ctx.textAlign    = "center";
-    ctx.textBaseline = "middle";
     ctx.lineJoin     = "round";
     ctx.lineCap      = "round";
 
@@ -31,6 +29,14 @@ function Drawing(canvas)  {
 
         setFont: function(value) {
             ctx.font = value;
+        },
+
+        setTextAlign: function(value) {
+            ctx.textAlign = value;
+        },
+
+        setTextBaseline: function(value) {
+            ctx.textBaseline = value;
         },
 
         fillRectangle: function(centerPt, halfWidth, halfHeight) {
@@ -137,13 +143,15 @@ function Drawing(canvas)  {
     }
 
     var Default = {
-        BACKGROUND:   "white",
-        COLOR:        "black",
-        SIZE:         "",
-        LINE_STYLE:   "solid",
-        LINE_WIDTH:   "thin",
-        FILL_MODE:    "empty",
-        ORIENTATION:  "horizontal"
+        BACKGROUND:    "white",
+        COLOR:         "black",
+        SIZE:          "",
+        LINE_STYLE:    "solid",
+        LINE_WIDTH:    "thin",
+        FILL_MODE:     "empty",
+        ORIENTATION:   "horizontal",
+        TEXT_ALGIN:    "center",
+        TEXT_BASELINE: "middle"
     };
 
     /*
@@ -156,7 +164,16 @@ function Drawing(canvas)  {
         var instructions = new Array();
         var metaInstructions = {
             background: { shape: "background", color: Default.BACKGROUND },
-            shapes: { shape: "shapes", color: Default.COLOR, lineStyle: Default.LINE_STYLE, lineWidth: Default.LINE_WIDTH, fillMode: Default.FILL_MODE }
+            shapes: {
+                shape: "shapes",
+                color:        Default.COLOR,
+                lineStyle:    Default.LINE_STYLE,
+                lineWidth:    Default.LINE_WIDTH,
+                fillMode:     Default.FILL_MODE,
+                orientation:  Default.ORIENTATION,
+                textAlign:    Default.TEXT_ALGIN,
+                textBaseline: Default.TEXT_BASELINE
+            }
         };
 
         rows.forEach(function(row) {
@@ -198,7 +215,9 @@ function Drawing(canvas)  {
             orientation:    null,
             cardinality:    1,
             borderPosition: new Array(),
-            borderRatio:    null
+            borderRatio:    null,
+            textAlign:      null,
+            textBaseline:   null
         };
     }
 
@@ -295,13 +314,15 @@ function Drawing(canvas)  {
 
                 case "shapes":
                     metaInstructions[token] = {
-                        shape:       token,
-                        color:       properties.color       || Default.COLOR,
-                        size:        properties.size        || Default.SIZE,
-                        lineStyle:   properties.lineStyle   || Default.LINE_STYLE,
-                        lineWidth:   properties.lineWidth   || Default.LINE_WIDTH,
-                        fillMode:    properties.fillMode    || Default.FILL_MODE,
-                        orientation: properties.orientation || Default.ORIENTATION
+                        shape:        token,
+                        color:        properties.color        || Default.COLOR,
+                        size:         properties.size         || Default.SIZE,
+                        lineStyle:    properties.lineStyle    || Default.LINE_STYLE,
+                        lineWidth:    properties.lineWidth    || Default.LINE_WIDTH,
+                        fillMode:     properties.fillMode     || Default.FILL_MODE,
+                        orientation:  properties.orientation  || Default.ORIENTATION,
+                        textAlign:    properties.textAlign    || Default.TEXT_ALGIN,
+                        textBaseline: properties.textBaseline || Default.TEXT_BASELINE
                     };
                     properties = newProperties();
                     return;
@@ -345,11 +366,13 @@ function Drawing(canvas)  {
             if (token.search(/^".*"$/) == 0 || token.search(/^'.*'$/) == 0) {
                 for (var i = 0; i < properties.cardinality; i++) {
                     appendDrawingInstruction(drawingInstructions, {
-                        color:       properties.color,
-                        size:        properties.size,
-                        orientation: properties.orientation,
-                        text:        token_.substr(1, token_.length - 2),
-                        shape:       "label"
+                        color:        properties.color,
+                        size:         properties.size,
+                        orientation:  properties.orientation,
+                        text:         token_.substr(1, token_.length - 2),
+                        textAlign:    properties.textAlign,
+                        textBaseline: properties.textBaseline,
+                        shape:        "label"
                     }, composition);
                 };
                 properties  = newProperties();
@@ -387,8 +410,22 @@ function Drawing(canvas)  {
                     properties.orientation = token;
                     return;
 
-                case "left": case "right": case "top": case "bottom":
+                case "left": case "right":
+                    properties.textAlign = token;
                     properties.borderPosition.push(token);
+                    return;
+
+                case "center":
+                    properties.textAlign = token;
+                    return;
+
+                case "top": case "bottom":
+                    properties.textBaseline = token;
+                    properties.borderPosition.push(token);
+                    return;
+
+                case "middle":
+                    properties.textBaseline = token;
                     return;
             }
 
@@ -416,14 +453,15 @@ function Drawing(canvas)  {
 
     function translateSymbols(token) {
         switch (token) {
-            case "_": return "blank";
-            case "#": return "square";
-            case "o": return "circle";
-            case "[]": return "rectangle";
-            case "()": return "ellipse";
+            case "_":   return "blank";
+            case "#":   return "square";
+            case "o":   return "circle";
+            case "[]":  return "rectangle";
+            case "()":  return "ellipse";
             case "/\\": return "triangle";
-            case "-": return "line";
-            default: return token;
+            case "-":   return "line";
+            case "|":   return "vertical";
+            default:    return token;
         }
     }
 
@@ -552,8 +590,12 @@ function Drawing(canvas)  {
         }
     }
 
-    function calcFontSize(rect, rowCount, columnCount, size) {
-        return Math.min((rect.right - rect.left) / columnCount / 2, (rect.bottom - rect.top) / rowCount / 2) * factor(size);
+    function calcFontSize(rect, rowCount, columnCount, size, orientation) {
+        if (orientation == "veritcal") {
+            return (rect.bottom - rect.top) / rowCount / 2 * factor(size);
+        } else {
+            return (rect.right - rect.left) / columnCount / 2* factor(size);
+        }
     }
 
     function calcLineWidth(lineWidth) {
@@ -604,12 +646,14 @@ function Drawing(canvas)  {
     function renderMetaInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
         switch (instruction.shape) {
             case "shapes":
-                canvas.defaultColor       = instruction.color;
-                canvas.defaultSize        = instruction.size;
-                canvas.defaultLineStyle   = instruction.lineStyle;
-                canvas.defaultLineWidth   = instruction.lineWidth;
-                canvas.defaultFillMode    = instruction.fillMode;
-                canvas.defaultOrientation = instruction.orientation;
+                canvas.defaultColor        = instruction.color;
+                canvas.defaultSize         = instruction.size;
+                canvas.defaultLineStyle    = instruction.lineStyle;
+                canvas.defaultLineWidth    = instruction.lineWidth;
+                canvas.defaultFillMode     = instruction.fillMode;
+                canvas.defaultOrientation  = instruction.orientation;
+                canvas.defaultTextAlign    = instruction.textAlign;
+                canvas.defaultTextBaseline = instruction.textBaseline;
                 return;
 
             case "border":
@@ -714,7 +758,10 @@ function Drawing(canvas)  {
                 break;
 
             case "label":
-                drawing.setFont(calcFontSize(rect, rowCount, columnCount, instruction.size) + "pt Arial");
+                drawing.setFont(calcFontSize(rect, rowCount, columnCount, instruction.size || canvas.defaultSize, instruction.orientation || canvas.defaultOrientation) + "px Arial");
+                console.log(instruction.textAlign, canvas.defaultTextAlign);
+                drawing.setTextAlign(instruction.textAlign || canvas.defaultTextAlign);
+                drawing.setTextBaseline(instruction.textBaseline || canvas.defaultTextBaseline);
                 drawing.fillText(calcCenter(rect, currentRow, currentColumn, rowCount, columnCount),
                     Math.min(calcRadius(width, columnCount, instruction.size || canvas.defaultSize), calcRadius(height, rowCount, instruction.size || canvas.defaultSize)),
                     instruction.text, (instruction.orientation || canvas.defaultOrientation) == "vertical" ? -90 : 0);
