@@ -759,7 +759,6 @@ function Drawing(canvas)  {
 
             case "label":
                 drawing.setFont(calcFontSize(rect, rowCount, columnCount, instruction.size || canvas.defaultSize, instruction.orientation || canvas.defaultOrientation) + "px Arial");
-                console.log(instruction.textAlign, canvas.defaultTextAlign);
                 drawing.setTextAlign(instruction.textAlign || canvas.defaultTextAlign);
                 drawing.setTextBaseline(instruction.textBaseline || canvas.defaultTextBaseline);
                 drawing.fillText(calcCenter(rect, currentRow, currentColumn, rowCount, columnCount),
