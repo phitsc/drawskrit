@@ -85,6 +85,18 @@ Draw four red circles:
 Notice that all shapes can also be specified in their plural form.
 
 
+### Shape composition
+
+Multiple shapes can be drawn within the same cell. For this they are joined together using the `on` specifier.
+
+Draw a tiny filled red triangle on a small green circle on a big blue square:
+
+```
+filled shapes
+tiny red triangle on small green circle on big blue square
+```
+
+
 ### Shape properties
 
 Shapes can be specified with various properties in order to change their color, size, filling and line style.
