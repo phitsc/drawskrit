@@ -219,3 +219,5 @@ red square
 
 ### Layers
 
+Multiple images can be drawn on top of each other using layers. Layers are divided by one or more `=` symbols.
+
