@@ -137,13 +137,13 @@ function Drawing(canvas)  {
     }
 
     var Default = {
-        BACKGROUND: "white",
-        COLOR: "black",
-        SIZE: "",
-        LINE_STYLE: "solid",
-        LINE_WIDTH: "thin",
-        FILL_MODE: "empty",
-        ORIENTATION: "horizontal"
+        BACKGROUND:   "white",
+        COLOR:        "black",
+        SIZE:         "",
+        LINE_STYLE:   "solid",
+        LINE_WIDTH:   "thin",
+        FILL_MODE:    "empty",
+        ORIENTATION:  "horizontal"
     };
 
     /*
@@ -190,13 +190,15 @@ function Drawing(canvas)  {
 
     function newProperties() {
         return {
-            color:       null,
-            size:        null,
-            lineStyle:   null,
-            lineWidth:   null,
-            fillMode:    null,
-            orientation: null,
-            cardinality: 1
+            color:          null,
+            size:           null,
+            lineStyle:      null,
+            lineWidth:      null,
+            fillMode:       null,
+            orientation:    null,
+            cardinality:    1,
+            borderPosition: new Array(),
+            borderRatio:    null
         };
     }
 
@@ -283,7 +285,7 @@ function Drawing(canvas)  {
             afterShape = false;
 
             /*
-            Shapes & meta instructions
+            Meta instructions
             */
             switch (token) {
                 case "background":
@@ -304,16 +306,22 @@ function Drawing(canvas)  {
                     properties = newProperties();
                     return;
 
-                case "blank":
-                case "blanks":
-                    for (var i = 0; i < properties.cardinality; i++) {
-                        drawingInstructions.push({ shape: "blank" });
-                    }
+                case "border":
+                    metaInstructions[token] = {
+                        shape:          token,
+                        borderPosition: properties.borderPosition || new Array(),
+                        borderRatio:    properties.borderRatio    || 0
+                    };
                     properties = newProperties();
                     return;
+            }
 
-                case "square": case "rectangle": case "circle": case "ellipse": case "triangle": case "line": case "smile":
-                case "squares": case "rectangles": case "circles": case "ellipses": case "triangles": case "lines": case "smiles":
+            /*
+            Shapes
+            */
+            switch (token) {
+                case "blank": case "square": case "rectangle": case "circle": case "ellipse": case "triangle": case "line": case "smile":
+                case "blanks": case "squares": case "rectangles": case "circles": case "ellipses": case "triangles": case "lines": case "smiles":
                     for (var i = 0; i < properties.cardinality; i++) {
                         appendDrawingInstruction(drawingInstructions, {
                             color:       properties.color,
@@ -378,11 +386,25 @@ function Drawing(canvas)  {
                 case "horizontal": case "vertical":
                     properties.orientation = token;
                     return;
+
+                case "left": case "right": case "top": case "bottom":
+                    properties.borderPosition.push(token);
+                    return;
             }
 
             if (!isNaN(token)) {
                 properties.cardinality = parseInt(token);
                 return;
+            }
+
+            var ratioMatch = /(\d+)\/(\d+)/.exec(token);
+            if (ratioMatch) {
+                var num = parseInt(ratioMatch[1]);
+                var den = parseInt(ratioMatch[2]);
+
+                if (den > 0) {
+                    properties.borderRatio = num / den;
+                }
             }
         });
 
@@ -407,6 +429,7 @@ function Drawing(canvas)  {
 
     function renderLayers(layers) {
         drawing.clear();
+        resetCanvas();
 
         var firstLayer = true;
         layers.forEach(function(instructions) {
@@ -453,7 +476,7 @@ function Drawing(canvas)  {
         var columnCount = rowInstructions.drawingInstructions.length;
 
         for (var key in rowInstructions.metaInstructions) {
-            renderInstruction(rowInstructions.metaInstructions[key], currentRow, 0, rowCount, columnCount);
+            renderMetaInstruction(rowInstructions.metaInstructions[key], currentRow, 0, rowCount, columnCount);
         }
 
         var currentColumn = 0;
@@ -578,26 +601,66 @@ function Drawing(canvas)  {
         }
     }
 
+    function renderMetaInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
+        switch (instruction.shape) {
+            case "shapes":
+                canvas.defaultColor       = instruction.color;
+                canvas.defaultSize        = instruction.size;
+                canvas.defaultLineStyle   = instruction.lineStyle;
+                canvas.defaultLineWidth   = instruction.lineWidth;
+                canvas.defaultFillMode    = instruction.fillMode;
+                canvas.defaultOrientation = instruction.orientation;
+                return;
+
+            case "border":
+                canvas.borderPosition = instruction.borderPosition;
+                canvas.borderRatio    = instruction.borderRatio;
+            return;
+        }
+    }
+
+    function resetCanvas() {
+        delete canvas.borderPosition;
+        delete canvas.borderRatio;
+    }
+
+    function calcCanvasRect(canvas) {
+        var bp = canvas
+
+        if (!canvas.borderPosition || !canvas.borderRatio) {
+            return { left: 0, top: 0, right: canvas.width, bottom: canvas.height };
+        } else if (canvas.borderPosition.length == 0) {
+            var br = canvas.borderRatio;
+
+            return {
+                left:   br * canvas.width,
+                top:    br * canvas.height,
+                right:  canvas.width - br * canvas.width,
+                bottom: canvas.height - br * canvas.height
+            };
+        } else {
+            var bp = canvas.borderPosition;
+            var br = canvas.borderRatio;
+
+            return {
+                left:   bp.indexOf("left")   >= 0 ? (br * canvas.width) : 0,
+                top:    bp.indexOf("top")    >= 0 ? (br * canvas.height) : 0,
+                right:  bp.indexOf("right")  >= 0 ? (canvas.width - br * canvas.width) : canvas.width,
+                bottom: bp.indexOf("bottom") >= 0 ? (canvas.height - br * canvas.height) : canvas.height
+            };
+        }
+    }
+
     /*
     Render a single instruction.
     */
     function renderInstruction(instruction, currentRow, currentColumn, rowCount, columnCount) {
-        if (instruction.shape == "shapes") {
-            canvas.defaultColor       = instruction.color;
-            canvas.defaultSize        = instruction.size;
-            canvas.defaultLineStyle   = instruction.lineStyle;
-            canvas.defaultLineWidth   = instruction.lineWidth;
-            canvas.defaultFillMode    = instruction.fillMode;
-            canvas.defaultOrientation = instruction.orientation;
-            return;
-        }
-
         drawing.setFillStyle(instruction.color || canvas.defaultColor);
         drawing.setStrokeStyle(instruction.color || canvas.defaultColor);
         setLineStyle(instruction.lineStyle || canvas.defaultLineStyle, instruction.lineWidth || canvas.defaultLineWidth);
         setLineWidth(instruction.lineWidth || canvas.defaultLineWidth);
 
-        var rect = { left: 0, top: 0, right: canvas.width, bottom: canvas.height };
+        var rect = calcCanvasRect(canvas);
         var width = rect.right - rect.left;
         var height = rect.bottom - rect.top;
 
