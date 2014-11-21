@@ -9,8 +9,7 @@ Drawskrit is a description language for simple drawings and diagrams.
 * a Drawskrit drawing is grid-based
 * every line of text specifies a row of the grid
 * every shape specifies a column of the grid
-* each cell can only contain a single shape (but see layers)
-* everything before a shape describes the shape (but see meta instructions and text label peculiarities)
+* everything before a shape describes the shape (but see meta instructions)
 * shapes resize depending on the total number of rows / columns (but see layers)
 * all description is case-insensitive
 * lines are stripped, i.e. leading and trailing whitespace is removed before the line is processed
@@ -60,6 +59,17 @@ Shape       | Symbol
 `blank`     | `_`
 
 The purpose of `blank` is to add invisible shapes to the grid in order to resize and position the other shapes as required.
+
+
+### Text labels
+
+Text specified in single or double quotes is considered to be a text label. It occupies a cell just like shapes.
+
+The text _Drawskript_ :
+
+```
+"Drawskript"
+```
 
 
 ### Shape cardinality
@@ -122,21 +132,18 @@ Line width | No. pixels
 
 Adding the `filled` specifier before a shape will fill the respective shape.
 
-### Text labels
+#### Text alignment
 
-Text specified in single or double quotes is considered to be a label for the following shape. It is drawn in the shapes center.
+Text alignment can be controlled with the following properties:
 
-The text "Drawskript" (without the quotes) drawn centered in an ellipse:
-
-```
-"Drawskript" ellipse
-```
-
-When drawing multiple shapes using shape cardinality it is possible to specify a different label for each one of them:
-
-```
-"Drawskript" "rules" 2 rectangles
-```
+Property | Alignment
+:------: | :-------:
+left     | align horizontally to the left of the middle
+center   | align horizontally centered
+right    | align horizontally to the right of the middle
+top      | align vertically to the top of the middle
+middle   | align vertically centered
+bottom   | align vertically to the bottom of the middle
 
 
 ### Comments
@@ -146,7 +153,7 @@ Lines starting with `;` (semicolon) are considered to be comments and are ignore
 
 ### Meta instructions
 
-There are two special instructions that have an effect on all shapes that are specified after them:
+There are three special instructions that have an effect on all shapes that are specified after them:
 
 #### Background
 
@@ -167,6 +174,8 @@ green background 2 circles
 lime background 3 squares
 ```
 
+Note that background is drawn on the first layer only (see Layers).
+
 #### Shapes
 
 The `shapes` meta instruction allows to change the default properties of all the shapes following its specification:
@@ -183,6 +192,18 @@ Draw a big purple filled circle, a big red filled square and a big green filled 
 big filled shapes
 purple circle red square green triangle
 ```
+
+#### Border
+
+The `border` meta instruction inserts an invisible border with the specified size and at the specified side of the drawing. The size is specified as a proportion of the drawing dimensions. The side is specified as `left`, `right`, `top` and `bottom`. While it is possible to define borders for multiple sides, they can only be set to the same proportion. If not side is specified (i.e. only a proportion) the invisible border is 'drawn' on all four sides.
+
+Draw a red square to the right of a 1/8 border:
+
+```
+1/8 left border
+red square
+```
+
 
 ### Layers
 
