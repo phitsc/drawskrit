@@ -1,3 +1,6 @@
+/* Copyright (c) 2014, Philipp Tschannen
+*/
+
 "use strict";
 
 function Drawing(canvas)  {
