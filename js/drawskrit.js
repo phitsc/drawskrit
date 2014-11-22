@@ -210,17 +210,17 @@ function Drawing(canvas)  {
 
     function newProperties() {
         return {
-            color:          null,
-            size:           null,
-            lineStyle:      null,
-            lineWidth:      null,
-            fillMode:       null,
-            orientation:    null,
-            cardinality:    1,
-            borderPosition: new Array(),
-            borderRatio:    null,
-            textAlign:      null,
-            textBaseline:   null
+            color:           null,
+            size:            null,
+            lineStyle:       null,
+            lineWidth:       null,
+            fillMode:        null,
+            orientation:     null,
+            cardinality:     1,
+            paddingPosition: new Array(),
+            paddingRatio:    null,
+            textAlign:       null,
+            textBaseline:    null
         };
     }
 
@@ -330,11 +330,11 @@ function Drawing(canvas)  {
                     properties = newProperties();
                     return;
 
-                case "border":
+                case "padding":
                     metaInstructions[token] = {
                         shape:          token,
-                        borderPosition: properties.borderPosition || new Array(),
-                        borderRatio:    properties.borderRatio    || 0
+                        paddingPosition: properties.paddingPosition || new Array(),
+                        paddingRatio:    properties.paddingRatio    || 0
                     };
                     properties = newProperties();
                     return;
@@ -415,7 +415,7 @@ function Drawing(canvas)  {
 
                 case "left": case "right":
                     properties.textAlign = token;
-                    properties.borderPosition.push(token);
+                    properties.paddingPosition.push(token);
                     return;
 
                 case "center":
@@ -424,7 +424,7 @@ function Drawing(canvas)  {
 
                 case "top": case "bottom":
                     properties.textBaseline = token;
-                    properties.borderPosition.push(token);
+                    properties.paddingPosition.push(token);
                     return;
 
                 case "middle":
@@ -443,7 +443,7 @@ function Drawing(canvas)  {
                 var den = parseInt(ratioMatch[2]);
 
                 if (den > 0) {
-                    properties.borderRatio = num / den;
+                    properties.paddingRatio = num / den;
                 }
             }
         });
@@ -659,25 +659,25 @@ function Drawing(canvas)  {
                 canvas.defaultTextBaseline = instruction.textBaseline;
                 return;
 
-            case "border":
-                canvas.borderPosition = instruction.borderPosition;
-                canvas.borderRatio    = instruction.borderRatio;
+            case "padding":
+                canvas.paddingPosition = instruction.paddingPosition;
+                canvas.paddingRatio    = instruction.paddingRatio;
             return;
         }
     }
 
     function resetCanvas() {
-        delete canvas.borderPosition;
-        delete canvas.borderRatio;
+        delete canvas.paddingPosition;
+        delete canvas.paddingRatio;
     }
 
     function calcCanvasRect(canvas) {
         var bp = canvas
 
-        if (!canvas.borderPosition || !canvas.borderRatio) {
+        if (!canvas.paddingPosition || !canvas.paddingRatio) {
             return { left: 0, top: 0, right: canvas.width, bottom: canvas.height };
-        } else if (canvas.borderPosition.length == 0) {
-            var br = canvas.borderRatio;
+        } else if (canvas.paddingPosition.length == 0) {
+            var br = canvas.paddingRatio;
 
             return {
                 left:   br * canvas.width,
@@ -686,8 +686,8 @@ function Drawing(canvas)  {
                 bottom: canvas.height - br * canvas.height
             };
         } else {
-            var bp = canvas.borderPosition;
-            var br = canvas.borderRatio;
+            var bp = canvas.paddingPosition;
+            var br = canvas.paddingRatio;
 
             return {
                 left:   bp.indexOf("left")   >= 0 ? (br * canvas.width) : 0,

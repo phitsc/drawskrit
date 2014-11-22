@@ -205,14 +205,14 @@ big filled shapes
 purple circle red square green triangle
 ```
 
-#### Border
+#### Padding
 
-The `border` meta instruction inserts an invisible border with the specified size and at the specified side of the drawing. The size is specified as a proportion of the drawing dimensions. The side is specified as `left`, `right`, `top` and `bottom`. While it is possible to define borders for multiple sides, they can only be set to the same proportion. If not side is specified (i.e. only a proportion) the invisible border is 'drawn' on all four sides.
+The `padding` meta instruction inserts padding with the specified size and at the specified side of the drawing. The size is specified as a proportion of the drawing dimensions. The side is specified as `left`, `right`, `top` and `bottom`. While it is possible to define padding for multiple sides, they can only be set to the same proportion. If no side is specified (i.e. only a proportion) the padding is added to all four sides.
 
-Draw a red square to the right of a 1/8 border:
+Draw a red square to the right of a 1/8 padding:
 
 ```
-1/8 left border
+1/8 left padding
 red square
 ```
 
