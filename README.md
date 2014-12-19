@@ -1,4 +1,4 @@
-## Drawscript
+## Drawskrit
 _drawing for text-afficionados_
 
 Drawskrit is a description language for simple drawings and diagrams.
