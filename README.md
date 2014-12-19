@@ -44,7 +44,7 @@ filled blue square filled yellow square
 
 ### Shapes
 
-Shapes are the main drawing instructions. Some of the shapes can be specified not only by their name, but also by an equivalent "symbol" (which can be made up by one or more symbols).
+Shapes are the main drawing instructions. Some of the shapes can be specified not only by their name, but also by an equivalent "symbol" (which can be made up by one or more characters).
 
 The supported shapes are:
 
@@ -65,10 +65,10 @@ The purpose of `blank` is to add invisible shapes to the grid in order to resize
 
 Text specified in single or double quotes is considered to be a text label. It occupies a cell just like shapes.
 
-The text _Drawskript_ :
+The text _Drawskrit_ :
 
 ```
-"Drawskript"
+"Drawskrit"
 ```
 
 
@@ -113,14 +113,14 @@ Valid color specifiers are:
 
 Valid size specifiers are:
 
-Size | % if cell width / height
+Size | % of cell width / height
 :---:|:------:
 `tiny` | 25%
 `small` | 50%
 `big`   | 85%
 `huge` | 100%
 
-In case no size is specified shapes are drawn with 75% of a cells width / height.
+In case no size is specified shapes are drawn with 75% of a cell's width / height.
 
 #### Line style
 
@@ -198,7 +198,7 @@ Draw a big purple filled circle, a big red filled square and a big green filled 
 big purple filled circle big red filled square big green filled triangle
 ```
 
-Draw a big purple filled circle, a big red filled square and a big green filled triangle:
+or using the shapes meta instruction:
 
 ```
 big filled shapes
